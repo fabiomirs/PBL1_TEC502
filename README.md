@@ -1,6 +1,6 @@
 # VENDEPASS: Venda de Passagens
 ## Introdução
-** [contexto] **, ** [problema] **, ** [contribuição] **, ** [metodologia] **, ** [resultados] **.
+** (contexto) **, ** (problema) **, ** (contribuição) **, ** (metodologia) **, ** (resultados) **.
 
 ## Fundamentação teórica
 
