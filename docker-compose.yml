@@ -1,0 +1,29 @@
+version: '3'
+services:
+  servidor:
+    build:
+      context: .
+      target: servidor
+    container_name: servidor-container
+    ports:
+      - "4000:4000"
+
+  cliente1:
+    build:
+      context: .
+      target: cliente
+    container_name: cliente1-container
+    depends_on:
+      - servidor
+    stdin_open: true     # Permite entrada interativa
+    tty: true            # Aloca um terminal para o contêiner
+
+  cliente2:
+    build:
+      context: .
+      target: cliente
+    container_name: cliente2-container
+    depends_on:
+      - servidor
+    stdin_open: true     # Permite entrada interativa
+    tty: true            # Aloca um terminal para o contêiner
