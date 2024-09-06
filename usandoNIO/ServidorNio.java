@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServidorNio {
+    private static ConcurrentHashMap<SocketChannel, String> clientesConectados = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, SocketChannel> clientesConectadosPorCPF = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, Integer> trechosDisponiveis = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws IOException {
@@ -49,20 +51,34 @@ public class ServidorNio {
                     int bytesRead = clientChannel.read(buffer);
 
                     if (bytesRead == -1) {
+                        // Cliente desconectado
+                        String cpf = clientesConectados.remove(clientChannel);
+                        if (cpf != null) {
+                            clientesConectadosPorCPF.remove(cpf);
+                            System.out.println("Cliente com CPF " + cpf + " desconectado.");
+                        }
                         clientChannel.close();
                     } else {
                         buffer.flip();
                         String request = new String(buffer.array()).trim();
-                        System.out.println("Recebido: " + request);
 
-                        String[] parts = request.split(",");
-                        String acao = parts[0];
-
-                        if (acao.equals("comprar")) {
-                            String trecho = parts[1];
-                            processarCompra(clientChannel, trecho);
-                        } else if (acao.equals("listar")) {
-                            listarTrechos(clientChannel);
+                        // Se o cliente ainda não foi identificado
+                        if (!clientesConectados.containsKey(clientChannel)) {
+                            if (clientesConectadosPorCPF.containsKey(request)) {
+                                // CPF já em uso, rejeitar conexão
+                                clientChannel.write(ByteBuffer.wrap("CPF já em uso. Conexão recusada.".getBytes()));
+                                clientChannel.close();
+                            } else {
+                                // Registrar CPF e cliente
+                                clientesConectados.put(clientChannel, request);
+                                clientesConectadosPorCPF.put(request, clientChannel);
+                                System.out.println("Cliente identificado com CPF: " + request);
+                                clientChannel.write(ByteBuffer.wrap(("CPF registrado: " + request).getBytes()));
+                            }
+                        } else {
+                            // Processar requisição
+                            String cpf = clientesConectados.get(clientChannel);
+                            processarRequisicao(clientChannel, request, cpf);
                         }
                     }
                 }
@@ -71,13 +87,32 @@ public class ServidorNio {
         }
     }
 
-    private static synchronized void processarCompra(SocketChannel clientChannel, String trecho) throws IOException {
+    private static synchronized void processarRequisicao(SocketChannel clientChannel, String request, String cpf) throws IOException {
+        String[] parts = request.split(",");
+        String acao = parts[0];
+
+        if (acao.equals("comprar")) {
+            String trecho = parts[1];
+            processarCompra(clientChannel, trecho, cpf);
+        } else if (acao.equals("listar")) {
+            listarTrechos(clientChannel, cpf);
+        } else if (acao.equals("sair")) {
+            // Desconectar cliente
+            clientesConectados.remove(clientChannel);
+            clientesConectadosPorCPF.remove(cpf);
+            System.out.println("Cliente com CPF " + cpf + " saiu.");
+            clientChannel.write(ByteBuffer.wrap("Conexão encerrada.".getBytes()));
+            clientChannel.close();
+        }
+    }
+
+    private static synchronized void processarCompra(SocketChannel clientChannel, String trecho, String cpf) throws IOException {
         if (trechosDisponiveis.containsKey(trecho)) {
             int passagensRestantes = trechosDisponiveis.get(trecho);
 
             if (passagensRestantes > 0) {
                 trechosDisponiveis.put(trecho, passagensRestantes - 1);
-                String resposta = "Passagem comprada para o trecho " + trecho + ". Restantes: " + (passagensRestantes - 1);
+                String resposta = "Passagem comprada para o trecho " + trecho + " pelo cliente de CPF " + cpf + ". Restantes: " + (passagensRestantes - 1);
                 clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
             } else {
                 String resposta = "Desculpe, não há mais passagens disponíveis para o trecho " + trecho;
@@ -89,8 +124,8 @@ public class ServidorNio {
         }
     }
 
-    private static void listarTrechos(SocketChannel clientChannel) throws IOException {
-        StringBuilder response = new StringBuilder("Trechos disponíveis:\n");
+    private static void listarTrechos(SocketChannel clientChannel, String cpf) throws IOException {
+        StringBuilder response = new StringBuilder("Trechos disponíveis para o cliente de CPF " + cpf + ":\n");
         trechosDisponiveis.forEach((trecho, quantidade) -> {
             response.append(trecho).append(": ").append(quantidade).append(" passagens restantes\n");
         });
