@@ -29,61 +29,76 @@ public class ServidorNio {
         System.out.println("Servidor pronto para receber conexões...");
 
         while (true) {
-            selector.select(); // Espera por eventos
-            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iterator = selectedKeys.iterator();
+            try {
+                // Espera por eventos
+                selector.select();
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> iterator = selectedKeys.iterator();
 
-            while (iterator.hasNext()) {
-                SelectionKey key = iterator.next();
+                while (iterator.hasNext()) {
+                    SelectionKey key = iterator.next();
+                    iterator.remove();
 
-                if (key.isAcceptable()) {
-                    // Aceitar nova conexão
-                    ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
-                    SocketChannel clientChannel = serverChannel.accept();
-                    clientChannel.configureBlocking(false);
-                    clientChannel.register(selector, SelectionKey.OP_READ);
-                    System.out.println("Novo cliente conectado: " + clientChannel.getRemoteAddress());
+                    try {
+                        if (key.isAcceptable()) {
+                            // Aceitar nova conexão
+                            ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+                            SocketChannel clientChannel = serverChannel.accept();
+                            clientChannel.configureBlocking(false);
+                            clientChannel.register(selector, SelectionKey.OP_READ);
+                            System.out.println("Novo cliente conectado: " + clientChannel.getRemoteAddress());
+                        } else if (key.isReadable()) {
+                            // Ler dados do cliente
+                            SocketChannel clientChannel = (SocketChannel) key.channel();
+                            ByteBuffer buffer = ByteBuffer.allocate(256);
+                            int bytesRead = clientChannel.read(buffer);
 
-                } else if (key.isReadable()) {
-                    // Ler dados do cliente
-                    SocketChannel clientChannel = (SocketChannel) key.channel();
-                    ByteBuffer buffer = ByteBuffer.allocate(256);
-                    int bytesRead = clientChannel.read(buffer);
-
-                    if (bytesRead == -1) {
-                        // Cliente desconectado
-                        String cpf = clientesConectados.remove(clientChannel);
-                        if (cpf != null) {
-                            clientesConectadosPorCPF.remove(cpf);
-                            System.out.println("Cliente com CPF " + cpf + " desconectado.");
-                        }
-                        clientChannel.close();
-                    } else {
-                        buffer.flip();
-                        String request = new String(buffer.array()).trim();
-
-                        // Se o cliente ainda não foi identificado
-                        if (!clientesConectados.containsKey(clientChannel)) {
-                            if (clientesConectadosPorCPF.containsKey(request)) {
-                                // CPF já em uso, rejeitar conexão
-                                clientChannel.write(ByteBuffer.wrap("CPF já em uso. Conexão recusada.".getBytes()));
+                            if (bytesRead == -1) {
+                                // Cliente desconectado
+                                String cpf = clientesConectados.remove(clientChannel);
+                                if (cpf != null) {
+                                    clientesConectadosPorCPF.remove(cpf);
+                                    System.out.println("Cliente com CPF " + cpf + " desconectado.");
+                                }
                                 clientChannel.close();
                             } else {
-                                // Registrar CPF e cliente
-                                clientesConectados.put(clientChannel, request);
-                                clientesConectadosPorCPF.put(request, clientChannel);
-                                System.out.println("Cliente identificado com CPF: " + request);
-                                clientChannel.write(ByteBuffer.wrap(("CPF registrado: " + request).getBytes()));
+                                buffer.flip();
+                                String request = new String(buffer.array()).trim();
+
+                                // Se o cliente ainda não foi identificado, solicitar CPF
+                                if (!clientesConectados.containsKey(clientChannel)) {
+                                    validarERegistrarCPF(clientChannel, request);
+                                } else {
+                                    // Processar requisição após o CPF ser validado
+                                    String cpf = clientesConectados.get(clientChannel);
+                                    processarRequisicao(clientChannel, request, cpf);
+                                }
                             }
-                        } else {
-                            // Processar requisição
-                            String cpf = clientesConectados.get(clientChannel);
-                            processarRequisicao(clientChannel, request, cpf);
                         }
+                    } catch (IOException e) {
+                        // Tratamento de exceção e continuar servidor
+                        System.err.println("Erro na conexão: " + e.getMessage());
+                        key.cancel(); // Remover a chave do cliente com erro
+                        key.channel().close(); // Fechar o canal associado
                     }
                 }
-                iterator.remove();
+            } catch (IOException e) {
+                System.err.println("Erro geral: " + e.getMessage());
+                // Continuar a execução do servidor após o erro
             }
+        }
+    }
+
+    private static void validarERegistrarCPF(SocketChannel clientChannel, String request) throws IOException {
+        if (clientesConectadosPorCPF.containsKey(request)) {
+            // CPF já em uso, solicitar novo CPF
+            clientChannel.write(ByteBuffer.wrap("CPF já em uso. Insira um CPF diferente:".getBytes()));
+        } else {
+            // Registrar CPF e cliente
+            clientesConectados.put(clientChannel, request);
+            clientesConectadosPorCPF.put(request, clientChannel);
+            System.out.println("Cliente identificado com CPF: " + request);
+            clientChannel.write(ByteBuffer.wrap(("CPF registrado: " + request).getBytes()));
         }
     }
 

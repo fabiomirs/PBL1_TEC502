@@ -17,15 +17,33 @@ public class ClienteNio {
 
         System.out.println("Conectado ao servidor de passagens!");
 
-        // Solicitar o CPF para identificação
-        System.out.print("Digite seu CPF (11 dígitos): ");
-        String cpf = scanner.nextLine();
-        enviarMensagem(socketChannel, cpf);  // Envia o CPF ao servidor
+        // Solicitar o CPF para identificação com validação
+        String cpf;
+        boolean cpfValido = false;  // Adiciona uma flag para controlar a validade do CPF
 
-        // Receber a resposta de confirmação do servidor
-        receberResposta(socketChannel);
+        while (!cpfValido) {
+            System.out.print("Digite seu CPF (11 dígitos): ");
+            cpf = scanner.nextLine();
 
-        // Loop de interação com o cliente
+            // Verifica se o CPF contém apenas números e possui 11 dígitos
+            if (cpf.matches("\\d{11}")) {
+                // Enviar o CPF ao servidor
+                enviarMensagem(socketChannel, cpf);
+
+                // Aguardar a resposta do servidor sobre a validade do CPF
+                String respostaServidor = receberResposta(socketChannel);
+
+                if (respostaServidor.contains("CPF registrado")) {
+                    cpfValido = true;  // CPF aceito pelo servidor, sair do loop
+                } else if (respostaServidor.contains("CPF já em uso")) {
+                    System.out.println("Tente novamente.");
+                }
+            } else {
+                System.out.println("CPF inválido. O CPF deve conter exatamente 11 dígitos numéricos.");
+            }
+        }
+
+        // Loop de interação com o cliente após CPF válido
         while (true) {
             System.out.println("Escolha uma ação: ");
             System.out.println("1. Comprar passagem");
@@ -64,7 +82,7 @@ public class ClienteNio {
         buffer.clear();
     }
 
-    private static void receberResposta(SocketChannel socketChannel) throws IOException {
+    private static String receberResposta(SocketChannel socketChannel) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(256);
         int bytesRead = 0;
 
@@ -78,6 +96,9 @@ public class ClienteNio {
             String resposta = new String(buffer.array(), 0, bytesRead);
             System.out.println("Resposta do servidor: ");
             System.out.println(resposta);
+            return resposta;
         }
+
+        return "";  // Retorna string vazia em caso de falha
     }
 }
