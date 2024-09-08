@@ -18,6 +18,8 @@ public class ServidorNio {
     private static ConcurrentHashMap<String, Map<String,Integer>> trechos; // pros grafos
 
     private static String origem_cliente;
+
+    private static HashMap<String, String> origem_dos_clientes;
     
 
     
@@ -26,6 +28,7 @@ public class ServidorNio {
 
     public static void main(String[] args) throws IOException {
         ServidorNio grafo = new ServidorNio();
+        origem_dos_clientes = new HashMap<>();
 
         // Adicionar algumas arestas direcionadas (origem → destino)
         grafo.adicionarCidade("São Paulo", "Rio de Janeiro",2);
@@ -126,12 +129,13 @@ public class ServidorNio {
         if (acao.equals("comprar")) {
             String cidade = parts[1];
             String codigo = parts[2];
-            System.out.println("CIDADE MOMENTANEA: "+cidade+"codigo: "+codigo);
+            
 
             if(codigo.equals("1")){
                 if(trechos.containsKey(cidade)){
-                    origem_cliente = cidade;
-                    String resposta = "De acordo com seu local de Origem: "+origem_cliente+"\n"+"Temos os seguintes destinos {destino=passagens} ---> "+trechos.get(cidade).toString();
+                    //origem_cliente = cidade;
+                    origem_dos_clientes.put(cpf, cidade);
+                    String resposta = "De acordo com seu local de Origem: "+origem_dos_clientes.get(cpf)+"\n"+"Temos os seguintes destinos {destino=passagens} ---> "+trechos.get(cidade).toString();
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
                 }
                 else{
@@ -142,7 +146,7 @@ public class ServidorNio {
             }
             else if(codigo.equals("2")){
                 System.out.println("analisando se sua cidade tem de acordo com a origem");
-                if(trechos.get(origem_cliente).containsKey(cidade)){
+                if(trechos.get(origem_dos_clientes.get(cpf)).containsKey(cidade)){
                     //processo pra fazer a venda
                     processarCompra(clientChannel, cidade, cpf);
                 }
@@ -169,16 +173,14 @@ public class ServidorNio {
 
 
     private static synchronized void processarCompra(SocketChannel clientChannel, String cidade_destino, String cpf) throws IOException {
-        System.out.println(trechos.get(origem_cliente).get(cidade_destino));
-        System.out.println(trechos.get(origem_cliente));
-        System.out.println(trechos.get(cidade_destino));
-        int qnt_passagens  = trechos.get(origem_cliente).get(cidade_destino);
+        
+        int qnt_passagens  = trechos.get(origem_dos_clientes.get(cpf)).get(cidade_destino);
         if(qnt_passagens < 0){
             String resposta = "Desculpe, não há mais passagens disponíveis para o trecho " + cidade_destino;
             clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
         }else{
             int novo_passagens = qnt_passagens-1;
-            trechos.get(origem_cliente).put(cidade_destino, novo_passagens);
+            trechos.get(origem_dos_clientes.get(cpf)).put(cidade_destino, novo_passagens);
             String resposta = "Passagem comprada para a cidade " + cidade_destino + " pelo cliente de CPF " + cpf + ". Restantes: " + novo_passagens;
             clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
         }
