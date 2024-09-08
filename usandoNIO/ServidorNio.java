@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,11 +15,26 @@ public class ServidorNio {
     private static ConcurrentHashMap<String, SocketChannel> clientesConectadosPorCPF = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, Integer> trechosDisponiveis = new ConcurrentHashMap<>();
 
+    private static Map<String, Map<String,Integer>> trechos; // pros grafos
+
+    private static String origem_cliente;
+
+
+    
+
+
+
     public static void main(String[] args) throws IOException {
-        // Inicializar os trechos e passagens disponíveis
-        trechosDisponiveis.put("Belem-Fortaleza", 10);
-        trechosDisponiveis.put("Fortaleza-SaoPaulo", 8);
-        trechosDisponiveis.put("SaoPaulo-Curitiba", 5);
+        ServidorNio grafo = new ServidorNio();
+
+        // Adicionar algumas arestas direcionadas (origem → destino)
+        grafo.adicionarCidade("São Paulo", "Rio de Janeiro",2);
+        grafo.adicionarCidade("São Paulo", "Belo Horizonte",2);
+        grafo.adicionarCidade("Rio de Janeiro", "Belo Horizonte",2);
+        grafo.adicionarCidade("Belo Horizonte", "São Paulo",2);
+        grafo.adicionarCidade("Belo Horizonte", "Brasília",2);
+        grafo.adicionarCidade("Brasília", "Brasília",2); // Loop em Brasília
+
 
         // Configuração do NIO
         Selector selector = Selector.open();
@@ -139,12 +156,23 @@ public class ServidorNio {
         }
     }
 
-    private static void listarTrechos(SocketChannel clientChannel, String cpf) throws IOException {
-        StringBuilder response = new StringBuilder("Trechos disponíveis para o cliente de CPF " + cpf + ":\n");
-        trechosDisponiveis.forEach((trecho, quantidade) -> {
-            response.append(trecho).append(": ").append(quantidade).append(" passagens restantes\n");
-        });
 
-        clientChannel.write(ByteBuffer.wrap(response.toString().getBytes()));
+
+    // Construtor para inicializar o grafo
+    public ServidorNio() {
+        trechos = new HashMap<>(); // Inicializa o mapa de adjacência
     }
+
+
+    // Método para adicionar uma aresta direcionada de origem para destino
+    public void adicionarCidade(String origem, String destino,Integer passagens) {
+        // Se a origem não existir no mapa, inicializa a lista de adjacência
+        trechos.putIfAbsent(origem, new HashMap<>());
+        // Adiciona o destino à lista de adjacência da origem
+        trechos.get(origem).put(destino, passagens);
+        // Também garantimos que o vértice de destino esteja no mapa, mesmo que sem adjacências
+        trechos.putIfAbsent(destino, new HashMap<>());
+    }
+
+    
 }
