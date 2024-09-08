@@ -48,9 +48,17 @@ public class ClienteNio {
             String opcao = menu();
 
             if (opcao.equals("1")) {
-                System.out.print("Digite o trecho (ex: Belem-Fortaleza): ");
-                String trecho = scanner.nextLine();
-                String mensagem = "comprar," + trecho;
+                String origem_cliente = local_cliente();
+                String mensagem = "comprar," + origem_cliente;
+                enviarMensagem(socketChannel, mensagem);
+                receberResposta(socketChannel);
+                
+                System.out.print("Para onde deseja ir: ");
+
+                Scanner scanner2 = new Scanner(System.in);
+                String destino_cliente = scanner2.nextLine();
+
+                mensagem = "comprar," + destino_cliente+","+"2";
                 enviarMensagem(socketChannel, mensagem);
 
             } else if (opcao.equals("2")) {
@@ -111,4 +119,14 @@ public class ClienteNio {
         return mensagem;
 
     }
+
+    public static String local_cliente(){
+        System.out.print("Digite qual cidade voce está: ");
+        Scanner scanner = new Scanner(System.in);
+        String origem_cliente = scanner.nextLine();
+        String compactar_origem_cliente = origem_cliente+","+"1";
+        return compactar_origem_cliente;
+    }
+
+    
 }
