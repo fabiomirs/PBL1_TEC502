@@ -85,7 +85,7 @@ public class ClienteNio {
     }
 
     private static String receberResposta(SocketChannel socketChannel) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(256);
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
         int bytesRead = 0;
 
         // Loop para aguardar a resposta do servidor
@@ -142,6 +142,11 @@ public class ClienteNio {
             String mensagem = "comprar," + destino_cliente+","+"2";
             return mensagem;
         }
+
+
+        
+
+        
     }
 
     
