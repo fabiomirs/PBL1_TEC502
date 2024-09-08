@@ -17,7 +17,6 @@ public class ServidorNio {
 
     private static ConcurrentHashMap<String, Map<String,Integer>> trechos; // pros grafos
 
-    private static String origem_cliente;
 
     private static HashMap<String, String> origem_dos_clientes;
     
@@ -133,7 +132,6 @@ public class ServidorNio {
 
             if(codigo.equals("1")){
                 if(trechos.containsKey(cidade)){
-                    //origem_cliente = cidade;
                     origem_dos_clientes.put(cpf, cidade);
                     String resposta = "De acordo com seu local de Origem: "+origem_dos_clientes.get(cpf)+"\n"+"Temos os seguintes destinos {destino=passagens} ---> "+trechos.get(cidade).toString();
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
