@@ -21,9 +21,6 @@ public class ServidorNio {
     private static HashMap<String, String> origem_dos_clientes;
     
 
-    
-
-
 
     public static void main(String[] args) throws IOException {
         ServidorNio grafo = new ServidorNio();
@@ -173,7 +170,7 @@ public class ServidorNio {
     private static synchronized void processarCompra(SocketChannel clientChannel, String cidade_destino, String cpf) throws IOException {
         
         int qnt_passagens  = trechos.get(origem_dos_clientes.get(cpf)).get(cidade_destino);
-        if(qnt_passagens < 0){
+        if(qnt_passagens <= 0){
             String resposta = "Desculpe, não há mais passagens disponíveis para o trecho " + cidade_destino;
             clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
         }else{
