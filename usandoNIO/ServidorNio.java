@@ -27,12 +27,26 @@ public class ServidorNio {
         origem_dos_clientes = new HashMap<>();
 
         // Adicionar algumas arestas direcionadas (origem → destino)
-        grafo.adicionarCidade("Sao Paulo", "Rio de Janeiro", 2);
-        grafo.adicionarCidade("Sao Paulo", "Belo Horizonte", 2);
-        grafo.adicionarCidade("Rio de Janeiro", "Belo Horizonte", 2);
-        grafo.adicionarCidade("Belo Horizonte", "Sao Paulo", 2);
-        grafo.adicionarCidade("Belo Horizonte", "Brasilia", 2);
-        grafo.adicionarCidade("Brasilia", "Brasilia", 2); // Loop em Brasilia
+        grafo.adicionarCidade("Sao Paulo", "Rio de Janeiro", 5);
+        grafo.adicionarCidade("Sao Paulo", "Brasilia", 10);
+        grafo.adicionarCidade("Rio de Janeiro", "Sao Paulo", 5);
+        grafo.adicionarCidade("Rio de Janeiro", "Brasilia", 8);
+        grafo.adicionarCidade("Brasilia", "Sao Paulo", 10);
+        grafo.adicionarCidade("Brasilia", "Rio de Janeiro", 8);
+        grafo.adicionarCidade("Brasilia", "Salvador", 9);
+        grafo.adicionarCidade("Salvador", "Brasilia", 9);
+        grafo.adicionarCidade("Salvador", "Recife", 4);
+        grafo.adicionarCidade("Fortaleza", "Recife", 5);
+        grafo.adicionarCidade("Fortaleza", "Brasilia", 12);
+        grafo.adicionarCidade("Belo Horizonte", "Sao Paulo", 6);
+        grafo.adicionarCidade("Belo Horizonte", "Rio de Janeiro", 7);
+        grafo.adicionarCidade("Manaus", "Brasilia", 15);
+        grafo.adicionarCidade("Curitiba", "Sao Paulo", 4);
+        grafo.adicionarCidade("Curitiba", "Porto Alegre", 6);
+        grafo.adicionarCidade("Porto Alegre", "Curitiba", 6);
+        grafo.adicionarCidade("Recife", "Salvador", 4);
+        grafo.adicionarCidade("Recife", "Fortaleza", 5);
+
 
 
 
@@ -67,7 +81,7 @@ public class ServidorNio {
                         } else if (key.isReadable()) {
                             // Ler dados do cliente
                             SocketChannel clientChannel = (SocketChannel) key.channel();
-                            ByteBuffer buffer = ByteBuffer.allocate(256);
+                            ByteBuffer buffer = ByteBuffer.allocate(1024);
                             int bytesRead = clientChannel.read(buffer);
 
                             if (bytesRead == -1) {
@@ -216,6 +230,7 @@ public class ServidorNio {
     // Método para imprimir a lista de adjacência do grafo
     public static String mostrarTrechos() {
         String resultado = trechos.toString();
+        //System.out.println(resultado);
         return resultado;
     }
 }
