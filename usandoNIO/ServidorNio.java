@@ -156,7 +156,14 @@ public class ServidorNio {
         }
     }
 
+    private static void listarTrechos(SocketChannel clientChannel, String cpf) throws IOException {
+        StringBuilder response = new StringBuilder("Trechos disponíveis para o cliente de CPF " + cpf + ":\n"+mostrarTrechos()); 
 
+        ByteBuffer respostaBuffer = ByteBuffer.wrap(response.toString().getBytes()); 
+                            
+        // Enviar a resposta ao cliente
+        clientChannel.write(respostaBuffer);
+    }
 
     // Construtor para inicializar o grafo
     public ServidorNio() {
@@ -172,6 +179,12 @@ public class ServidorNio {
         trechos.get(origem).put(destino, passagens);
         // Também garantimos que o vértice de destino esteja no mapa, mesmo que sem adjacências
         trechos.putIfAbsent(destino, new HashMap<>());
+    }
+
+    // Método para imprimir a lista de adjacência do grafo
+    public static String mostrarTrechos() {
+        String resultado = trechos.toString();
+        return resultado;
     }
 
     
