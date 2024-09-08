@@ -27,12 +27,13 @@ public class ServidorNio {
         origem_dos_clientes = new HashMap<>();
 
         // Adicionar algumas arestas direcionadas (origem → destino)
-        grafo.adicionarCidade("São Paulo", "Rio de Janeiro",2);
-        grafo.adicionarCidade("São Paulo", "Belo Horizonte",2);
-        grafo.adicionarCidade("Rio de Janeiro", "Belo Horizonte",2);
-        grafo.adicionarCidade("Belo Horizonte", "São Paulo",2);
-        grafo.adicionarCidade("Belo Horizonte", "Brasília",2);
-        grafo.adicionarCidade("Brasília", "Brasília",2); // Loop em Brasília
+        grafo.adicionarCidade("Sao Paulo", "Rio de Janeiro", 2);
+        grafo.adicionarCidade("Sao Paulo", "Belo Horizonte", 2);
+        grafo.adicionarCidade("Rio de Janeiro", "Belo Horizonte", 2);
+        grafo.adicionarCidade("Belo Horizonte", "Sao Paulo", 2);
+        grafo.adicionarCidade("Belo Horizonte", "Brasilia", 2);
+        grafo.adicionarCidade("Brasilia", "Brasilia", 2); // Loop em Brasilia
+
 
 
         // Configuração do NIO
