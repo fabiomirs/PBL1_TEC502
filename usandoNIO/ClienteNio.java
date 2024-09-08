@@ -45,25 +45,19 @@ public class ClienteNio {
 
         // Loop de interação com o cliente após CPF válido
         while (true) {
-            System.out.println("Escolha uma ação: ");
-            System.out.println("1. Comprar passagem");
-            System.out.println("2. Listar trechos disponíveis");
-            System.out.println("3. Sair");
-            System.out.print("Opção: ");
-            int opcao = scanner.nextInt();
-            scanner.nextLine(); // Limpar o buffer
+            String opcao = menu();
 
-            if (opcao == 1) {
+            if (opcao.equals("1")) {
                 System.out.print("Digite o trecho (ex: Belem-Fortaleza): ");
                 String trecho = scanner.nextLine();
                 String mensagem = "comprar," + trecho;
                 enviarMensagem(socketChannel, mensagem);
 
-            } else if (opcao == 2) {
+            } else if (opcao.equals("2")) {
                 String mensagem = "listar,";
                 enviarMensagem(socketChannel, mensagem);
 
-            } else if (opcao == 3) {
+            } else if (opcao.equals("3")) {
                 String mensagem = "sair,";
                 enviarMensagem(socketChannel, mensagem);  // Enviar mensagem de saída ao servidor
                 socketChannel.close();  // Fecha a conexão
@@ -100,5 +94,21 @@ public class ClienteNio {
         }
 
         return "";  // Retorna string vazia em caso de falha
+    }
+
+
+    public static String menu(){
+        System.out.println("Escolha uma ação: ");
+        System.out.println("[1] Comprar passagem");
+        System.out.println("[2] Listar trechos disponíveis");
+        System.out.println("[3] Sair");
+
+        System.out.print("Digite sua opcao: ");
+        Scanner scanner = new Scanner(System.in);
+        String mensagem = scanner.nextLine();
+
+
+        return mensagem;
+
     }
 }
