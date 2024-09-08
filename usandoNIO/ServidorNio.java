@@ -13,12 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServidorNio {
     private static ConcurrentHashMap<SocketChannel, String> clientesConectados = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, SocketChannel> clientesConectadosPorCPF = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, Integer> trechosDisponiveis = new ConcurrentHashMap<>();
+   // private static ConcurrentHashMap<String, Integer> trechosDisponiveis = new ConcurrentHashMap<>();
 
-    private static Map<String, Map<String,Integer>> trechos; // pros grafos
+    private static ConcurrentHashMap<String, Map<String,Integer>> trechos; // pros grafos
 
     private static String origem_cliente;
-
+    
 
     
 
@@ -124,8 +124,35 @@ public class ServidorNio {
         String acao = parts[0];
 
         if (acao.equals("comprar")) {
-            String trecho = parts[1];
-            processarCompra(clientChannel, trecho, cpf);
+            String cidade = parts[1];
+            String codigo = parts[2];
+            System.out.println("CIDADE MOMENTANEA: "+cidade+"codigo: "+codigo);
+
+            if(codigo.equals("1")){
+                if(trechos.containsKey(cidade)){
+                    origem_cliente = cidade;
+                    String resposta = "De acordo com seu local de Origem: "+origem_cliente+"\n"+"Temos os seguintes destinos {destino=passagens} ---> "+trechos.get(cidade).toString();
+                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+                }
+                else{
+                    String resposta = "Desculpa, mas com base nessa origem, não temos destinos disponiveis";
+                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+                }
+
+            }
+            else if(codigo.equals("2")){
+                System.out.println("analisando se sua cidade tem de acordo com a origem");
+                if(trechos.get(origem_cliente).containsKey(cidade)){
+                    //processo pra fazer a venda
+                    processarCompra(clientChannel, cidade, cpf);
+                }
+                else{
+                    String resposta = "Desculpa, mas não temos trajetos para esse destino";
+                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+                }
+            }
+
+            //processarCompra(clientChannel, cidade, cpf);
         } else if (acao.equals("listar")) {
             listarTrechos(clientChannel, cpf);
         } else if (acao.equals("sair")) {
@@ -138,23 +165,28 @@ public class ServidorNio {
         }
     }
 
-    private static synchronized void processarCompra(SocketChannel clientChannel, String trecho, String cpf) throws IOException {
-        if (trechosDisponiveis.containsKey(trecho)) {
-            int passagensRestantes = trechosDisponiveis.get(trecho);
 
-            if (passagensRestantes > 0) {
-                trechosDisponiveis.put(trecho, passagensRestantes - 1);
-                String resposta = "Passagem comprada para o trecho " + trecho + " pelo cliente de CPF " + cpf + ". Restantes: " + (passagensRestantes - 1);
-                clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-            } else {
-                String resposta = "Desculpe, não há mais passagens disponíveis para o trecho " + trecho;
-                clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-            }
-        } else {
-            String resposta = "Trecho inválido!";
+
+
+    private static synchronized void processarCompra(SocketChannel clientChannel, String cidade_destino, String cpf) throws IOException {
+        System.out.println(trechos.get(origem_cliente).get(cidade_destino));
+        System.out.println(trechos.get(origem_cliente));
+        System.out.println(trechos.get(cidade_destino));
+        int qnt_passagens  = trechos.get(origem_cliente).get(cidade_destino);
+        if(qnt_passagens < 0){
+            String resposta = "Desculpe, não há mais passagens disponíveis para o trecho " + cidade_destino;
+            clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+        }else{
+            int novo_passagens = qnt_passagens-1;
+            trechos.get(origem_cliente).put(cidade_destino, novo_passagens);
+            String resposta = "Passagem comprada para a cidade " + cidade_destino + " pelo cliente de CPF " + cpf + ". Restantes: " + novo_passagens;
             clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
         }
+
     }
+
+
+
 
     private static void listarTrechos(SocketChannel clientChannel, String cpf) throws IOException {
         StringBuilder response = new StringBuilder("Trechos disponíveis para o cliente de CPF " + cpf + ":\n"+mostrarTrechos()); 
@@ -165,9 +197,10 @@ public class ServidorNio {
         clientChannel.write(respostaBuffer);
     }
 
+
     // Construtor para inicializar o grafo
     public ServidorNio() {
-        trechos = new HashMap<>(); // Inicializa o mapa de adjacência
+        trechos = new ConcurrentHashMap<>(); // Inicializa o mapa de adjacência
     }
 
 
@@ -177,6 +210,7 @@ public class ServidorNio {
         trechos.putIfAbsent(origem, new HashMap<>());
         // Adiciona o destino à lista de adjacência da origem
         trechos.get(origem).put(destino, passagens);
+        
         // Também garantimos que o vértice de destino esteja no mapa, mesmo que sem adjacências
         trechos.putIfAbsent(destino, new HashMap<>());
     }
@@ -186,6 +220,4 @@ public class ServidorNio {
         String resultado = trechos.toString();
         return resultado;
     }
-
-    
 }
