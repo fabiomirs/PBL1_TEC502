@@ -51,19 +51,20 @@ public class ClienteNio {
                 String origem_cliente = local_cliente();
                 String mensagem = "comprar," + origem_cliente;
                 enviarMensagem(socketChannel, mensagem);
-                receberResposta(socketChannel);
+                String resposta_servidor= receberResposta(socketChannel);
+                mensagem  = organiza_venda(resposta_servidor);
+                if(mensagem!= null){
+                    enviarMensagem(socketChannel, mensagem);
+                    // Receber resposta do servidor
+                    receberResposta(socketChannel);
+                } 
                 
-                System.out.print("Para onde deseja ir: ");
-
-                Scanner scanner2 = new Scanner(System.in);
-                String destino_cliente = scanner2.nextLine();
-
-                mensagem = "comprar," + destino_cliente+","+"2";
-                enviarMensagem(socketChannel, mensagem);
 
             } else if (opcao.equals("2")) {
                 String mensagem = "listar,";
                 enviarMensagem(socketChannel, mensagem);
+                // Receber resposta do servidor
+                receberResposta(socketChannel);
 
             } else if (opcao.equals("3")) {
                 String mensagem = "sair,";
@@ -73,8 +74,7 @@ public class ClienteNio {
                 break;  
             }
 
-            // Receber resposta do servidor
-            receberResposta(socketChannel);
+            
         }
     }
 
@@ -126,6 +126,22 @@ public class ClienteNio {
         String origem_cliente = scanner.nextLine();
         String compactar_origem_cliente = origem_cliente+","+"1";
         return compactar_origem_cliente;
+    }
+
+
+    public static String organiza_venda(String resposta_servidor){
+        if(resposta_servidor.equals("Desculpa, mas com base nessa origem, não temos destinos disponiveis")){
+            return null;
+        }
+        else{
+            System.out.print("Para onde deseja ir: ");
+
+            Scanner scanner2 = new Scanner(System.in);
+            String destino_cliente = scanner2.nextLine();
+
+            String mensagem = "comprar," + destino_cliente+","+"2";
+            return mensagem;
+        }
     }
 
     
