@@ -9,6 +9,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Queue;
+
+
 
 public class ServidorNio {
     private static ConcurrentHashMap<SocketChannel, String> clientesConectados = new ConcurrentHashMap<>();
@@ -132,45 +138,50 @@ public class ServidorNio {
             clientChannel.write(ByteBuffer.wrap(("CPF registrado: " + request).getBytes()));
         }
     }
+    
 
     private static synchronized void processarRequisicao(SocketChannel clientChannel, String request, String cpf) throws IOException {
         String[] parts = request.split(",");
         String acao = parts[0];
-
+    
         if (acao.equals("comprar")) {
             String cidade = parts[1];
             String codigo = parts[2];
-            
-
-            if(codigo.equals("1")){
-                if(trechos.containsKey(cidade)){
+    
+            if (codigo.equals("1")) {
+                if (trechos.containsKey(cidade)) {
                     origem_dos_clientes.put(cpf, cidade);
-                    String resposta = "De acordo com seu local de Origem: "+origem_dos_clientes.get(cpf)+"\n"+"Temos os seguintes destinos {destino=passagens} ---> "+trechos.get(cidade).toString();
+                    String resposta = "De acordo com seu local de Origem: " + origem_dos_clientes.get(cpf) + "\n" +
+                                      "Temos os seguintes destinos {destino=passagens} ---> " + trechos.get(cidade).toString();
+                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+                } else {
+                    String resposta = "Desculpa, mas com base nessa origem, não temos destinos disponíveis";
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
                 }
-                else{
-                    String resposta = "Desculpa, mas com base nessa origem, não temos destinos disponiveis";
-                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-                }
-
-            }
-            else if(codigo.equals("2")){
-                System.out.println("analisando se sua cidade tem de acordo com a origem");
-                if(trechos.get(origem_dos_clientes.get(cpf)).containsKey(cidade)){
-                    //processo pra fazer a venda
+            } else if (codigo.equals("2")) {
+                if (trechos.get(origem_dos_clientes.get(cpf)).containsKey(cidade)) {
                     processarCompra(clientChannel, cidade, cpf);
-                }
-                else{
+                } else {
                     String resposta = "Desculpa, mas não temos trajetos para esse destino";
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
                 }
             }
-
-            //processarCompra(clientChannel, cidade, cpf);
         } else if (acao.equals("listar")) {
             listarTrechos(clientChannel, cpf);
+        } else if (acao.equals("listar_rotas")) {
+            String origem = parts[1];
+            String destino = parts[2];
+            List<List<String>> rotas = encontrarRotasBFS(origem, destino);
+            StringBuilder resposta = new StringBuilder("Rotas possíveis de " + origem + " para " + destino + ":\n");
+            if (rotas.isEmpty()) {
+                resposta.append("Nenhuma rota encontrada.");
+            } else {
+                for (List<String> rota : rotas) {
+                    resposta.append(String.join(" -> ", rota)).append("\n");
+                }
+            }
+            clientChannel.write(ByteBuffer.wrap(resposta.toString().getBytes()));
         } else if (acao.equals("sair")) {
-            // Desconectar cliente
             clientesConectados.remove(clientChannel);
             clientesConectadosPorCPF.remove(cpf);
             System.out.println("Cliente com CPF " + cpf + " saiu.");
@@ -178,6 +189,7 @@ public class ServidorNio {
             clientChannel.close();
         }
     }
+    
 
 
 
@@ -233,4 +245,53 @@ public class ServidorNio {
         //System.out.println(resultado);
         return resultado;
     }
+    
+    public static List<List<String>> encontrarRotasBFS(String origem, String destino) {
+        List<List<String>> rotas = new ArrayList<>();
+        Queue<List<String>> fila = new LinkedList<>();
+        boolean[] visitado = new boolean[trechos.size()];
+    
+        // Inicializa a fila com o caminho inicial contendo apenas a origem
+        List<String> caminhoInicial = new ArrayList<>();
+        caminhoInicial.add(origem);
+        fila.add(caminhoInicial);
+    
+        while (!fila.isEmpty()) {
+            List<String> caminhoAtual = fila.poll();
+            String ultimoNo = caminhoAtual.get(caminhoAtual.size() - 1);
+    
+            if (ultimoNo.equals(destino)) {
+                rotas.add(new ArrayList<>(caminhoAtual));
+            } else {
+                int indexAtual = obterIndiceNo(ultimoNo);
+                visitado[indexAtual] = true;
+    
+                Map<String, Integer> vizinhos = trechos.get(ultimoNo);
+                if (vizinhos != null) {
+                    for (String vizinho : vizinhos.keySet()) {
+                        int indexVizinho = obterIndiceNo(vizinho);
+                        if (!visitado[indexVizinho]) {
+                            List<String> novoCaminho = new ArrayList<>(caminhoAtual);
+                            novoCaminho.add(vizinho);
+                            fila.add(novoCaminho);
+                        }
+                    }
+                }
+            }
+        }
+    
+        return rotas;
+    }
+    
+    private static int obterIndiceNo(String no) {
+        int index = 0;
+        for (String key : trechos.keySet()) {
+            if (key.equals(no)) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+    
 }
