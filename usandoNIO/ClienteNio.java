@@ -46,36 +46,47 @@ public class ClienteNio {
         // Loop de interação com o cliente após CPF válido
         while (true) {
             String opcao = menu();
-
+        
             if (opcao.equals("1")) {
                 String origem_cliente = local_cliente();
                 String mensagem = "comprar," + origem_cliente;
                 enviarMensagem(socketChannel, mensagem);
-                String resposta_servidor= receberResposta(socketChannel);
-                mensagem  = organiza_venda(resposta_servidor);
-                if(mensagem!= null){
+                String resposta_servidor = receberResposta(socketChannel);
+                mensagem = organiza_venda(resposta_servidor);
+                if (mensagem != null) {
                     enviarMensagem(socketChannel, mensagem);
                     // Receber resposta do servidor
                     receberResposta(socketChannel);
-                } 
-                
-
+                }
+        
             } else if (opcao.equals("2")) {
                 String mensagem = "listar,";
                 enviarMensagem(socketChannel, mensagem);
                 // Receber resposta do servidor
                 receberResposta(socketChannel);
-
+        
             } else if (opcao.equals("3")) {
+                // Solicita ao usuário a origem e destino para listar rotas
+                System.out.print("Digite a cidade de origem: ");
+                Scanner scanner2 = new Scanner(System.in);
+                String origem = scanner2.nextLine();
+                System.out.print("Digite a cidade de destino: ");
+                String destino = scanner2.nextLine();
+        
+                String mensagem = "listar_rotas," + origem + "," + destino;
+                enviarMensagem(socketChannel, mensagem);
+                // Receber resposta do servidor
+                receberResposta(socketChannel);
+        
+            } else if (opcao.equals("4")) {
                 String mensagem = "sair,";
                 enviarMensagem(socketChannel, mensagem);  // Enviar mensagem de saída ao servidor
                 socketChannel.close();  // Fecha a conexão
                 System.out.println("Conexão encerrada.");
-                break;  
+                break;
             }
-
-            
         }
+        
     }
 
     private static void enviarMensagem(SocketChannel socketChannel, String mensagem) throws IOException {
@@ -105,20 +116,20 @@ public class ClienteNio {
     }
 
 
-    public static String menu(){
+    public static String menu() {
         System.out.println("Escolha uma ação: ");
         System.out.println("[1] Comprar passagem");
         System.out.println("[2] Listar trechos disponíveis");
-        System.out.println("[3] Sair");
-
+        System.out.println("[3] Listar rotas possíveis");
+        System.out.println("[4] Sair");
+    
         System.out.print("Digite sua opcao: ");
         Scanner scanner = new Scanner(System.in);
         String mensagem = scanner.nextLine();
-
-
+    
         return mensagem;
-
     }
+    
 
     public static String local_cliente(){
         System.out.print("Digite qual cidade voce está: ");
@@ -129,25 +140,19 @@ public class ClienteNio {
     }
 
 
-    public static String organiza_venda(String resposta_servidor){
-        if(resposta_servidor.equals("Desculpa, mas com base nessa origem, não temos destinos disponiveis")){
+    public static String organiza_venda(String resposta_servidor) {
+        if (resposta_servidor.equals("Desculpa, mas com base nessa origem, não temos destinos disponiveis")) {
             return null;
-        }
-        else{
+        } else {
             System.out.print("Para onde deseja ir: ");
-
             Scanner scanner2 = new Scanner(System.in);
             String destino_cliente = scanner2.nextLine();
-
-            String mensagem = "comprar," + destino_cliente+","+"2";
+    
+            String mensagem = "comprar," + destino_cliente + "," + "2";
             return mensagem;
         }
-
-
-        
-
-        
     }
+    
 
     
 }
