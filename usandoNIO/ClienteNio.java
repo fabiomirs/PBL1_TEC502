@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class ClienteNio {
@@ -48,37 +50,10 @@ public class ClienteNio {
             String opcao = menu();
         
             if (opcao.equals("1")) {
-                String origem_cliente = local_cliente();
-                String mensagem = "comprar," + origem_cliente;
-                enviarMensagem(socketChannel, mensagem);
-                String resposta_servidor = receberResposta(socketChannel);
-                mensagem = organiza_venda(resposta_servidor);
-                if (mensagem != null) {
-                    enviarMensagem(socketChannel, mensagem);
-                    // Receber resposta do servidor
-                    receberResposta(socketChannel);
-                }
-        
+                // Etapa 1: Solicitar as cidades disponíveis para escolha de origem e destino
+                iniciarCompra(socketChannel);
+
             } else if (opcao.equals("2")) {
-                String mensagem = "listar,";
-                enviarMensagem(socketChannel, mensagem);
-                // Receber resposta do servidor
-                receberResposta(socketChannel);
-        
-            } else if (opcao.equals("3")) {
-                // Solicita ao usuário a origem e destino para listar rotas
-                System.out.print("Digite a cidade de origem: ");
-                Scanner scanner2 = new Scanner(System.in);
-                String origem = scanner2.nextLine();
-                System.out.print("Digite a cidade de destino: ");
-                String destino = scanner2.nextLine();
-        
-                String mensagem = "listar_rotas," + origem + "," + destino;
-                enviarMensagem(socketChannel, mensagem);
-                // Receber resposta do servidor
-                receberResposta(socketChannel);
-        
-            } else if (opcao.equals("4")) {
                 String mensagem = "sair,";
                 enviarMensagem(socketChannel, mensagem);  // Enviar mensagem de saída ao servidor
                 socketChannel.close();  // Fecha a conexão
@@ -86,7 +61,51 @@ public class ClienteNio {
                 break;
             }
         }
-        
+    }
+
+    private static void iniciarCompra(SocketChannel socketChannel) throws IOException {
+        // Solicitar ao servidor as cidades disponíveis
+        enviarMensagem(socketChannel, "iniciar_compra,");
+        String respostaCidades = receberResposta(socketChannel);
+
+        // Mapeamento das cidades recebidas (número -> nome da cidade)
+        Map<Integer, String> cidadesMap = new HashMap<>();
+        String[] linhas = respostaCidades.split("\n");
+        for (String linha : linhas) {
+            if (linha.matches("\\d+\\.\\s.+")) { 
+                String[] partes = linha.split("\\.\\s");
+                int numero = Integer.parseInt(partes[0]);
+                String nomeCidade = partes[1];
+                cidadesMap.put(numero, nomeCidade);
+            }
+        }
+
+        // Cliente escolhe origem
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite o número correspondente à cidade de origem: ");
+        int numOrigem = Integer.parseInt(scanner.nextLine());
+        String cidadeOrigem = cidadesMap.get(numOrigem);
+
+        // Cliente escolhe destino
+        System.out.print("Digite o número correspondente à cidade de destino: ");
+        int numDestino = Integer.parseInt(scanner.nextLine());
+        String cidadeDestino = cidadesMap.get(numDestino);
+
+        // Enviar as cidades escolhidas ao servidor para listar rotas
+        String mensagemEscolherCidades = "escolher_cidades," + cidadeOrigem + "," + cidadeDestino;
+        enviarMensagem(socketChannel, mensagemEscolherCidades);
+
+        String respostaRotas = receberResposta(socketChannel);
+
+        // Cliente escolhe uma rota
+        System.out.print("Digite o número correspondente à rota escolhida: ");
+        String rotaEscolhida = scanner.nextLine();
+
+        String mensagemEscolherRota = "escolher_rota," + rotaEscolhida + "," + cidadeDestino;
+        enviarMensagem(socketChannel, mensagemEscolherRota);
+
+        // Receber confirmação da compra
+        String respostaCompra = receberResposta(socketChannel);
     }
 
     private static void enviarMensagem(SocketChannel socketChannel, String mensagem) throws IOException {
@@ -96,7 +115,7 @@ public class ClienteNio {
     }
 
     private static String receberResposta(SocketChannel socketChannel) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        ByteBuffer buffer = ByteBuffer.allocate(8192);
         int bytesRead = 0;
 
         // Loop para aguardar a resposta do servidor
@@ -106,22 +125,21 @@ public class ClienteNio {
 
         if (bytesRead > 0) {
             buffer.flip();
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
             String resposta = new String(buffer.array(), 0, bytesRead);
             System.out.println("Resposta do servidor: ");
             System.out.println(resposta);
             return resposta;
         }
 
-        return "";  // Retorna string vazia em caso de falha
+        return "";  
     }
 
-
     public static String menu() {
-        System.out.println("Escolha uma ação: ");
+        System.out.println("Escolha uma ação: \n");
         System.out.println("[1] Comprar passagem");
-        System.out.println("[2] Listar trechos disponíveis");
-        System.out.println("[3] Listar rotas possíveis");
-        System.out.println("[4] Sair");
+        System.out.println("[2] Sair");
     
         System.out.print("Digite sua opcao: ");
         Scanner scanner = new Scanner(System.in);
@@ -129,30 +147,4 @@ public class ClienteNio {
     
         return mensagem;
     }
-    
-
-    public static String local_cliente(){
-        System.out.print("Digite qual cidade voce está: ");
-        Scanner scanner = new Scanner(System.in);
-        String origem_cliente = scanner.nextLine();
-        String compactar_origem_cliente = origem_cliente+","+"1";
-        return compactar_origem_cliente;
-    }
-
-
-    public static String organiza_venda(String resposta_servidor) {
-        if (resposta_servidor.equals("Desculpa, mas com base nessa origem, não temos destinos disponiveis")) {
-            return null;
-        } else {
-            System.out.print("Para onde deseja ir: ");
-            Scanner scanner2 = new Scanner(System.in);
-            String destino_cliente = scanner2.nextLine();
-    
-            String mensagem = "comprar," + destino_cliente + "," + "2";
-            return mensagem;
-        }
-    }
-    
-
-    
 }
