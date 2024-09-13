@@ -33,25 +33,28 @@ public class ServidorNio {
         origem_dos_clientes = new HashMap<>();
 
         // Adicionar algumas arestas direcionadas (origem → destino)
-        grafo.adicionarCidade("Sao Paulo", "Rio de Janeiro", 5);
+        grafo.adicionarCidade("Sao Paulo", "Rio de Janeiro",10);
         grafo.adicionarCidade("Sao Paulo", "Brasilia", 10);
-        grafo.adicionarCidade("Rio de Janeiro", "Sao Paulo", 5);
-        grafo.adicionarCidade("Rio de Janeiro", "Brasilia", 8);
+        grafo.adicionarCidade("Rio de Janeiro", "Sao Paulo",10);
+        grafo.adicionarCidade("Rio de Janeiro", "Brasilia",10);
         grafo.adicionarCidade("Brasilia", "Sao Paulo", 10);
-        grafo.adicionarCidade("Brasilia", "Rio de Janeiro", 8);
-        grafo.adicionarCidade("Brasilia", "Salvador", 9);
-        grafo.adicionarCidade("Salvador", "Brasilia", 9);
-        grafo.adicionarCidade("Salvador", "Recife", 4);
-        grafo.adicionarCidade("Fortaleza", "Recife", 5);
-        grafo.adicionarCidade("Fortaleza", "Brasilia", 12);
-        grafo.adicionarCidade("Belo Horizonte", "Sao Paulo", 6);
-        grafo.adicionarCidade("Belo Horizonte", "Rio de Janeiro", 7);
-        grafo.adicionarCidade("Manaus", "Brasilia", 15);
-        grafo.adicionarCidade("Curitiba", "Sao Paulo", 4);
-        grafo.adicionarCidade("Curitiba", "Porto Alegre", 6);
-        grafo.adicionarCidade("Porto Alegre", "Curitiba", 6);
-        grafo.adicionarCidade("Recife", "Salvador", 4);
-        grafo.adicionarCidade("Recife", "Fortaleza", 5);
+        grafo.adicionarCidade("Brasilia", "Rio de Janeiro",10);
+        grafo.adicionarCidade("Brasilia", "Salvador",10);
+        grafo.adicionarCidade("Salvador", "Brasilia",10);
+        grafo.adicionarCidade("Salvador", "Recife",10);
+        grafo.adicionarCidade("Fortaleza", "Recife",10);
+        grafo.adicionarCidade("Fortaleza", "Brasilia", 10);
+        grafo.adicionarCidade("Fortaleza", "Belo Horizonte", 10);
+        grafo.adicionarCidade("Belo Horizonte", "Sao Paulo",10);
+        grafo.adicionarCidade("Belo Horizonte", "Rio de Janeiro",10);
+        grafo.adicionarCidade("Manaus", "Brasilia", 10);
+        grafo.adicionarCidade("Brasilia", "Manaus", 10);
+        grafo.adicionarCidade( "Sao Paulo","Curitiba",10);
+        grafo.adicionarCidade("Curitiba", "Sao Paulo",10);
+        grafo.adicionarCidade("Curitiba", "Porto Alegre",10);
+        grafo.adicionarCidade("Porto Alegre", "Curitiba",10);
+        grafo.adicionarCidade("Recife", "Salvador",10);
+        grafo.adicionarCidade("Recife", "Fortaleza",10);
 
 
 
@@ -144,83 +147,123 @@ public class ServidorNio {
         String[] parts = request.split(",");
         String acao = parts[0];
     
-        if (acao.equals("comprar")) {
-            String cidade = parts[1];
-            String codigo = parts[2];
-    
-            if (codigo.equals("1")) {
-                if (trechos.containsKey(cidade)) {
-                    origem_dos_clientes.put(cpf, cidade);
-                    String resposta = "De acordo com seu local de Origem: " + origem_dos_clientes.get(cpf) + "\n" +
-                                      "Temos os seguintes destinos {destino=passagens} ---> " + trechos.get(cidade).toString();
-                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-                } else {
-                    String resposta = "Desculpa, mas com base nessa origem, não temos destinos disponíveis";
-                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-                }
-            } else if (codigo.equals("2")) {
-                if (trechos.get(origem_dos_clientes.get(cpf)).containsKey(cidade)) {
-                    processarCompra(clientChannel, cidade, cpf);
-                } else {
-                    String resposta = "Desculpa, mas não temos trajetos para esse destino";
-                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-                }
+        if (acao.equals("iniciar_compra")) {
+            //Mostra as 10 cidades disponíveis
+            StringBuilder cidadesDisponiveis = new StringBuilder("Cidades disponíveis:\n");
+            int count = 1;
+            for (String cidade : trechos.keySet()) {
+                cidadesDisponiveis.append(count).append(". ").append(cidade).append("\n");
+                count++;
+                if (count > 10) break; // Limitar a 10 cidades
             }
-        } else if (acao.equals("listar")) {
-            listarTrechos(clientChannel, cpf);
-        } else if (acao.equals("listar_rotas")) {
-            String origem = parts[1];
-            String destino = parts[2];
-            List<List<String>> rotas = encontrarRotasBFS(origem, destino);
-            StringBuilder resposta = new StringBuilder("Rotas possíveis de " + origem + " para " + destino + ":\n");
-            if (rotas.isEmpty()) {
-                resposta.append("Nenhuma rota encontrada.");
+            clientChannel.write(ByteBuffer.wrap(cidadesDisponiveis.toString().getBytes()));
+    
+        } else if (acao.equals("escolher_cidades")) {
+            //Recebe a origem e o destino escolhidos
+            String cidadeOrigem = parts[1];
+            String cidadeDestino = parts[2];
+    
+            if (trechos.containsKey(cidadeOrigem)) {
+                origem_dos_clientes.put(cpf, cidadeOrigem);
+    
+                // Lista rotas possíveis
+                List<List<String>> rotas = encontrarRotasBFS(cidadeOrigem, cidadeDestino);
+                StringBuilder resposta = new StringBuilder("Rotas possíveis de " + cidadeOrigem + " para " + cidadeDestino + ":\n");
+    
+                if (rotas.isEmpty()) {
+    resposta.append("Nenhuma rota encontrada.");
+        } else {
+            int rotaNumero = 1;
+            for (List<String> rota : rotas) {
+                resposta.append("Rota ").append(rotaNumero).append(":\n");
+
+                int passagensTotalDisponiveis = Integer.MAX_VALUE; // valor inicial para as passagens 
+
+                StringBuilder rotaDetalhes = new StringBuilder();
+                for (int i = 0; i < rota.size() - 1; i++) {
+                    String trechoOrigem = rota.get(i);
+                    String trechoDestino = rota.get(i + 1);
+
+                    // Verifica se o trecho existe antes de acessar os detalhes
+                    if (trechos.containsKey(trechoOrigem) && trechos.get(trechoOrigem).containsKey(trechoDestino)) {
+                        int passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
+                        rotaDetalhes.append(trechoOrigem).append(" -> ").append(trechoDestino)
+                                    .append(" (Passagens disponíveis: ").append(passagensDisponiveis).append(")");
+
+                        // Atualiza a quantidade total de passagens disponíveis para a rota
+                        if (passagensDisponiveis < passagensTotalDisponiveis) {
+                            passagensTotalDisponiveis = passagensDisponiveis;
+                        }
+
+                        if (i < rota.size() - 2) {
+                            rotaDetalhes.append(", ");
+                        }
+                    } else {
+                        rotaDetalhes.append(trechoOrigem).append(" -> ").append(trechoDestino)
+                                    .append(" (Informação de passagens não disponível)");
+                    }
+                }
+
+                resposta.append(rotaDetalhes.toString()).append("\n");
+                resposta.append("Total de passagens disponíveis para a rota: ").append(passagensTotalDisponiveis).append("\n\n");
+
+                rotaNumero++;
+            }
+        }
+                clientChannel.write(ByteBuffer.wrap(resposta.toString().getBytes()));
             } else {
-                for (List<String> rota : rotas) {
-                    resposta.append(String.join(" -> ", rota)).append("\n");
-                }
+                clientChannel.write(ByteBuffer.wrap("Cidade de origem inválida.".getBytes()));
             }
-            clientChannel.write(ByteBuffer.wrap(resposta.toString().getBytes()));
-        } else if (acao.equals("sair")) {
-            clientesConectados.remove(clientChannel);
-            clientesConectadosPorCPF.remove(cpf);
-            System.out.println("Cliente com CPF " + cpf + " saiu.");
-            clientChannel.write(ByteBuffer.wrap("Conexão encerrada.".getBytes()));
-            clientChannel.close();
-        }
-    }
     
-
-
-
-
-    private static synchronized void processarCompra(SocketChannel clientChannel, String cidade_destino, String cpf) throws IOException {
-        
-        int qnt_passagens  = trechos.get(origem_dos_clientes.get(cpf)).get(cidade_destino);
-        if(qnt_passagens <= 0){
-            String resposta = "Desculpe, não há mais passagens disponíveis para o trecho " + cidade_destino;
-            clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
-        }else{
-            int novo_passagens = qnt_passagens-1;
-            trechos.get(origem_dos_clientes.get(cpf)).put(cidade_destino, novo_passagens);
-            String resposta = "Passagem comprada para a cidade " + cidade_destino + " pelo cliente de CPF " + cpf + ". Restantes: " + novo_passagens;
-            clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+        } else if (acao.equals("escolher_rota")) {
+            // Recebe a rota escolhida e processar a compra
+            int rotaEscolhida = Integer.parseInt(parts[1]) - 1; // A rota será recebida a partir da escolha do cliente
+            String cidadeOrigem = origem_dos_clientes.get(cpf);
+            String cidadeDestino = parts[2];
+            
+            List<List<String>> rotas = encontrarRotasBFS(cidadeOrigem, cidadeDestino);
+            if (rotaEscolhida >= 0 && rotaEscolhida < rotas.size()) {
+                List<String> rota = rotas.get(rotaEscolhida);
+    
+                // Calcula as passagens disponíveis para cada trecho da rota
+                int passagensTotalDisponiveis = Integer.MAX_VALUE;
+                boolean sucesso = true;
+                for (int i = 0; i < rota.size() - 1; i++) {
+                    String trechoOrigem = rota.get(i);
+                    String trechoDestino = rota.get(i + 1);
+                    int passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
+                    
+                    // Atualiza a quantidade total de passagens disponíveis para a rota
+                    if (passagensDisponiveis < passagensTotalDisponiveis) {
+                        passagensTotalDisponiveis = passagensDisponiveis;
+                    }
+                    
+                    if (passagensDisponiveis <= 0) {
+                        sucesso = false;
+                        break;
+                    }
+                }
+    
+                if (sucesso) {
+                    // Processar a compra para todos os trechos da rota escolhida
+                    for (int i = 0; i < rota.size() - 1; i++) {
+                        String trechoOrigem = rota.get(i);
+                        String trechoDestino = rota.get(i + 1);
+                        int passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
+                        trechos.get(trechoOrigem).put(trechoDestino, passagensDisponiveis - 1);
+                    }
+    
+                    String resposta = "Compra efetuada com sucesso para a rota: " + String.join(" -> ", rota);
+                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+                } else {
+                    String resposta = "Falha na compra. Não há passagens suficientes para um dos trechos da rota.";
+                    clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
+                }
+            } else {
+                clientChannel.write(ByteBuffer.wrap("Rota inválida.".getBytes()));
+            }
         }
-
     }
-
-
-
-
-    private static void listarTrechos(SocketChannel clientChannel, String cpf) throws IOException {
-        StringBuilder response = new StringBuilder("Trechos disponíveis para o cliente de CPF " + cpf + ":\n"+mostrarTrechos()); 
-
-        ByteBuffer respostaBuffer = ByteBuffer.wrap(response.toString().getBytes()); 
-                            
-        // Enviar a resposta ao cliente
-        clientChannel.write(respostaBuffer);
-    }
-
 
     // Construtor para inicializar o grafo
     public ServidorNio() {
