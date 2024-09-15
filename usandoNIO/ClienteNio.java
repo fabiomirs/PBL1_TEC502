@@ -24,43 +24,52 @@ public class ClienteNio {
         boolean cpfValido = false;  // Adiciona uma flag para controlar a validade do CPF
 
         while (!cpfValido) {
-            System.out.print("Digite seu CPF (11 dígitos): ");
-            cpf = scanner.nextLine();
+            try{
+                System.out.print("Digite seu CPF (11 dígitos): ");
+                cpf = scanner.nextLine();
 
-            // Verifica se o CPF contém apenas números e possui 11 dígitos
-            if (cpf.matches("\\d{11}")) {
-                // Enviar o CPF ao servidor
-                enviarMensagem(socketChannel, cpf);
+                // Verifica se o CPF contém apenas números e possui 11 dígitos
+                if (cpf.matches("\\d{11}")) {
+                    // Enviar o CPF ao servidor
+                    enviarMensagem(socketChannel, cpf);
 
-                // Aguardar a resposta do servidor sobre a validade do CPF
-                String respostaServidor = receberResposta(socketChannel);
+                    // Aguardar a resposta do servidor sobre a validade do CPF
+                    String respostaServidor = receberResposta(socketChannel);
 
-                if (respostaServidor.contains("CPF registrado")) {
-                    cpfValido = true;  // CPF aceito pelo servidor, sair do loop
-                } else if (respostaServidor.contains("CPF já em uso")) {
-                    System.out.println("Tente novamente.");
+                    if (respostaServidor.contains("CPF registrado")) {
+                        cpfValido = true;  // CPF aceito pelo servidor, sair do loop
+                    } else if (respostaServidor.contains("CPF já em uso")) {
+                        System.out.println("Tente novamente.");
+                    }
+                } else {
+                    System.out.println("CPF inválido. O CPF deve conter exatamente 11 dígitos numéricos.");
                 }
-            } else {
-                System.out.println("CPF inválido. O CPF deve conter exatamente 11 dígitos numéricos.");
             }
+            catch(Exception e){
+                erro_comunicacao();
+            }
+            
         }
 
         // Loop de interação com o cliente após CPF válido
-        while (true) {
-            String opcao = menu();
-        
-            if (opcao.equals("1")) {
-                // Etapa 1: Solicitar as cidades disponíveis para escolha de origem e destino
-                iniciarCompra(socketChannel);
-
-            } else if (opcao.equals("2")) {
-                String mensagem = "sair,";
-                enviarMensagem(socketChannel, mensagem);  // Enviar mensagem de saída ao servidor
-                socketChannel.close();  // Fecha a conexão
-                System.out.println("Conexão encerrada.");
-                break;
+        if(cpfValido){
+            while (true) {
+                String opcao = menu();
+            
+                if (opcao.equals("1")) {
+                    // Etapa 1: Solicitar as cidades disponíveis para escolha de origem e destino
+                    iniciarCompra(socketChannel);
+    
+                } else if (opcao.equals("2")) {
+                    String mensagem = "sair,";
+                    enviarMensagem(socketChannel, mensagem);  // Enviar mensagem de saída ao servidor
+                    socketChannel.close();  // Fecha a conexão
+                    System.out.println("Conexão encerrada.");
+                    break;
+                }
             }
         }
+        
     }
 
     private static void iniciarCompra(SocketChannel socketChannel) throws IOException {
@@ -80,32 +89,38 @@ public class ClienteNio {
             }
         }
 
-        // Cliente escolhe origem
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Digite o número correspondente à cidade de origem: ");
-        int numOrigem = Integer.parseInt(scanner.nextLine());
-        String cidadeOrigem = cidadesMap.get(numOrigem);
+        try{
+            // Cliente escolhe origem
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Digite o número correspondente à cidade de origem: ");
+            int numOrigem = Integer.parseInt(scanner.nextLine());
+            String cidadeOrigem = cidadesMap.get(numOrigem);
 
-        // Cliente escolhe destino
-        System.out.print("Digite o número correspondente à cidade de destino: ");
-        int numDestino = Integer.parseInt(scanner.nextLine());
-        String cidadeDestino = cidadesMap.get(numDestino);
+            // Cliente escolhe destino
+            System.out.print("Digite o número correspondente à cidade de destino: ");
+            int numDestino = Integer.parseInt(scanner.nextLine());
+            String cidadeDestino = cidadesMap.get(numDestino);
 
-        // Enviar as cidades escolhidas ao servidor para listar rotas
-        String mensagemEscolherCidades = "escolher_cidades," + cidadeOrigem + "," + cidadeDestino;
-        enviarMensagem(socketChannel, mensagemEscolherCidades);
+            // Enviar as cidades escolhidas ao servidor para listar rotas
+            String mensagemEscolherCidades = "escolher_cidades," + cidadeOrigem + "," + cidadeDestino;
+            enviarMensagem(socketChannel, mensagemEscolherCidades);
 
-        String respostaRotas = receberResposta(socketChannel);
+            String respostaRotas = receberResposta(socketChannel);
 
-        // Cliente escolhe uma rota
-        System.out.print("Digite o número correspondente à rota escolhida: ");
-        String rotaEscolhida = scanner.nextLine();
+            // Cliente escolhe uma rota
+            System.out.print("Digite o número correspondente à rota escolhida: ");
+            String rotaEscolhida = scanner.nextLine();
 
-        String mensagemEscolherRota = "escolher_rota," + rotaEscolhida + "," + cidadeDestino;
-        enviarMensagem(socketChannel, mensagemEscolherRota);
+            String mensagemEscolherRota = "escolher_rota," + rotaEscolhida + "," + cidadeDestino;
+            enviarMensagem(socketChannel, mensagemEscolherRota);
 
-        // Receber confirmação da compra
-        String respostaCompra = receberResposta(socketChannel);
+            // Receber confirmação da compra
+            String respostaCompra = receberResposta(socketChannel);
+        }
+        catch(Exception e){
+            erro_comunicacao();
+        }
+        
     }
 
     private static void enviarMensagem(SocketChannel socketChannel, String mensagem) throws IOException {
@@ -137,14 +152,27 @@ public class ClienteNio {
     }
 
     public static String menu() {
-        System.out.println("Escolha uma ação: \n");
-        System.out.println("[1] Comprar passagem");
-        System.out.println("[2] Sair");
-    
-        System.out.print("Digite sua opcao: ");
-        Scanner scanner = new Scanner(System.in);
-        String mensagem = scanner.nextLine();
-    
-        return mensagem;
+        try{
+            System.out.println("Escolha uma ação: \n");
+            System.out.println("[1] Comprar passagem");
+            System.out.println("[2] Sair");
+        
+            System.out.print("Digite sua opcao: ");
+            Scanner scanner = new Scanner(System.in);
+            String mensagem = scanner.nextLine();
+        
+            return mensagem;
+        }
+        catch(Exception e){
+            erro_comunicacao();
+            return null;
+        }
+    }
+
+
+    public static void erro_comunicacao(){
+        System.err.println("ERRO de comunicação: Conexão interrompida bruscamente!");
+        System.exit(0);
+        
     }
 }
