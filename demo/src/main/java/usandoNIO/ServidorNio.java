@@ -26,7 +26,6 @@ import java.util.Queue;
 public class ServidorNio {
     private static ConcurrentHashMap<SocketChannel, String> clientesConectados = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, SocketChannel> clientesConectadosPorCPF = new ConcurrentHashMap<>();
-   // private static ConcurrentHashMap<String, Integer> trechosDisponiveis = new ConcurrentHashMap<>();
 
     private static ConcurrentHashMap<String, Map<String,Long>> trechos; // pros grafos
 
@@ -36,7 +35,8 @@ public class ServidorNio {
 
 
     public static void main(String[] args) throws IOException {
-        ServidorNio grafo = new ServidorNio();
+        trechos = new ConcurrentHashMap<>();
+        
         origem_dos_clientes = new HashMap<>();
 
         // Caminho e nome do arquivo JSON
@@ -257,30 +257,6 @@ public class ServidorNio {
                 clientChannel.write(ByteBuffer.wrap("Rota inválida.".getBytes()));
             }
         }
-    }
-
-    // Construtor para inicializar o grafo
-    public ServidorNio() {
-        trechos = new ConcurrentHashMap<>(); // Inicializa o mapa de adjacência
-    }
-
-
-    // Método para adicionar uma aresta direcionada de origem para destino
-    public void adicionarCidade(String origem, String destino,Long passagens) {
-        // Se a origem não existir no mapa, inicializa a lista de adjacência
-        trechos.putIfAbsent(origem, new HashMap<>());
-        // Adiciona o destino à lista de adjacência da origem
-        trechos.get(origem).put(destino, passagens);
-        
-        // Também garantimos que o vértice de destino esteja no mapa, mesmo que sem adjacências
-        trechos.putIfAbsent(destino, new HashMap<>());
-    }
-
-    // Método para imprimir a lista de adjacência do grafo
-    public static String mostrarTrechos() {
-        String resultado = trechos.toString();
-        //System.out.println(resultado);
-        return resultado;
     }
     
     public static List<List<String>> encontrarRotasBFS(String origem, String destino) {
