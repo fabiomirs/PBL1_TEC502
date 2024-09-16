@@ -131,7 +131,6 @@ public class ServidorNio {
     
 
     private static synchronized void processarRequisicao(SocketChannel clientChannel, String request, String cpf) throws IOException {
-        System.out.println("clientes conectados sem cpf: "+clientesConectados);
         System.out.println("clientes conectados com cpf: "+clientesConectadosPorCPF);
         
         String[] parts = request.split(",");
@@ -246,7 +245,7 @@ public class ServidorNio {
                         Long passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
                         trechos.get(trechoOrigem).put(trechoDestino, passagensDisponiveis - 1);
                     }
-    
+                    atualizar_aquivo();
                     String resposta = "Compra efetuada com sucesso para a rota: " + String.join(" -> ", rota);
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
                 } else {
@@ -315,18 +314,43 @@ public class ServidorNio {
                 // Faz o parsing do arquivo e o converte em um objeto JSONObject
                 JSONObject jsonLido = (JSONObject) parser.parse(reader);
 
-                // Converter JSONObject para HashMap
-                //Map<String, Object> hashMapLido = new HashMap<>(jsonLido);
-
-                //System.out.println(hashMapLido);
                 trechos.putAll(jsonLido);
-                System.out.println(trechos);
-                System.out.println("passagens de salvador para fortaleza: "+trechos.get("Brasilia").get("Rio de Janeiro"));
+                
 
 
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
+    }
+
+    public static void atualizar_aquivo(){
+        // Caminho e nome do arquivo JSON
+        String caminhoPasta = "dados";
+        String nomeArquivo = "cidades.json";
+        File arquivoJSON = new File(caminhoPasta, nomeArquivo);
+
+
+
+        File pasta = new File(caminhoPasta);
+        if (!pasta.exists()) {
+            if (pasta.mkdirs()) {
+                System.out.println("Pasta criada com sucesso.");
+            } else {
+                System.out.println("Falha ao criar a pasta.");
+                return;
+            }
+        }
+
+        // Converter HashMap para JSONObject e salvar em arquivo JSON
+        JSONObject jsonObject = new JSONObject(trechos);
+
+        try (FileWriter file = new FileWriter(arquivoJSON)) {
+            file.write(jsonObject.toJSONString());
+            file.flush();
+            System.out.println("Trechos atualizados com sucesso: " + arquivoJSON.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
 }
