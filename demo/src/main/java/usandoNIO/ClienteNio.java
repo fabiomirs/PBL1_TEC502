@@ -98,23 +98,30 @@ public class ClienteNio {
             // Cliente escolhe destino
             System.out.print("Digite o número correspondente à cidade de destino: ");
             int numDestino = Integer.parseInt(scanner.nextLine());
-            String cidadeDestino = cidadesMap.get(numDestino);
 
-            // Enviar as cidades escolhidas ao servidor para listar rotas
-            String mensagemEscolherCidades = "escolher_cidades," + cidadeOrigem + "," + cidadeDestino;
-            enviarMensagem(socketChannel, mensagemEscolherCidades);
+            if(numOrigem == numDestino){
+                System.out.println("Impossivel comprar passagem do mesmo local de origem!");
+            }
+            else{
+                String cidadeDestino = cidadesMap.get(numDestino);
 
-            String respostaRotas = receberResposta(socketChannel);
+                // Enviar as cidades escolhidas ao servidor para listar rotas
+                String mensagemEscolherCidades = "escolher_cidades," + cidadeOrigem + "," + cidadeDestino;
+                enviarMensagem(socketChannel, mensagemEscolherCidades);
 
-            // Cliente escolhe uma rota
-            System.out.print("Digite o número correspondente à rota escolhida: ");
-            String rotaEscolhida = scanner.nextLine();
+                String respostaRotas = receberResposta(socketChannel);
 
-            String mensagemEscolherRota = "escolher_rota," + rotaEscolhida + "," + cidadeDestino;
-            enviarMensagem(socketChannel, mensagemEscolherRota);
+                // Cliente escolhe uma rota
+                System.out.print("Digite o número correspondente à rota escolhida: ");
+                String rotaEscolhida = scanner.nextLine();
 
-            // Receber confirmação da compra
-            String respostaCompra = receberResposta(socketChannel);
+                String mensagemEscolherRota = "escolher_rota," + rotaEscolhida + "," + cidadeDestino;
+                enviarMensagem(socketChannel, mensagemEscolherRota);
+
+                // Receber confirmação da compra
+                String respostaCompra = receberResposta(socketChannel);
+            }
+            
         }
         catch(Exception e){
             erro_comunicacao();
