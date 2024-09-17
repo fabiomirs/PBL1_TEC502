@@ -69,6 +69,7 @@ public class ServidorNio {
                     try {
                         if (key.isAcceptable()) {
                             // Aceitar nova conexão
+                            
                             ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
                             SocketChannel clientChannel = serverChannel.accept();
                             clientChannel.configureBlocking(false);
@@ -105,8 +106,17 @@ public class ServidorNio {
                     } catch (IOException e) {
                         // Tratamento de exceção e continuar servidor
                         System.err.println("Erro na conexão: " + e.getMessage());
+                        
                         key.cancel(); // Remover a chave do cliente com erro
                         key.channel().close(); // Fechar o canal associado
+
+                        //for para remover o cpf do cliente dos clientes conectados quando ocorre a interrupção
+                        for(String clientes_conectados : clientesConectadosPorCPF.keySet()){
+                            if(clientesConectadosPorCPF.get(clientes_conectados).isOpen() == false){
+                                clientesConectadosPorCPF.remove(clientes_conectados);
+                            }
+                            
+                        }
                     }
                 }
             } catch (IOException e) {
