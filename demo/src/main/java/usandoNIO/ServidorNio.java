@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class ServidorNio {
 
 
     private static HashMap<String, String> origem_dos_clientes;
+    private static HashMap<String,List> Registro_de_compra;
     
 
 
@@ -38,6 +40,7 @@ public class ServidorNio {
         trechos = new ConcurrentHashMap<>();
         
         origem_dos_clientes = new HashMap<>();
+        Registro_de_compra = new HashMap<>();
 
         // Caminho e nome do arquivo JSON
         String caminhoPasta = "dados";
@@ -141,7 +144,6 @@ public class ServidorNio {
     
 
     private static synchronized void processarRequisicao(SocketChannel clientChannel, String request, String cpf) throws IOException {
-        System.out.println("clientes conectados com cpf: "+clientesConectadosPorCPF);
         
         String[] parts = request.split(",");
         String acao = parts[0];
@@ -164,6 +166,7 @@ public class ServidorNio {
     
             if (trechos.containsKey(cidadeOrigem)) {
                 origem_dos_clientes.put(cpf, cidadeOrigem);
+
     
                 // Lista rotas possíveis
                 List<List<String>> rotas = encontrarRotasBFS(cidadeOrigem, cidadeDestino);
@@ -223,6 +226,8 @@ public class ServidorNio {
             int rotaEscolhida = Integer.parseInt(parts[1]) - 1; // A rota será recebida a partir da escolha do cliente
             String cidadeOrigem = origem_dos_clientes.get(cpf);
             String cidadeDestino = parts[2];
+
+            
             
             List<List<String>> rotas = encontrarRotasBFS(cidadeOrigem, cidadeDestino);
             if (rotaEscolhida >= 0 && rotaEscolhida < rotas.size()) {
@@ -255,8 +260,12 @@ public class ServidorNio {
                         Long passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
                         trechos.get(trechoOrigem).put(trechoDestino, passagensDisponiveis - 1);
                     }
-                    atualizar_aquivo();
+                    atualizar_arquivo_cidades();
                     String resposta = "Compra efetuada com sucesso para a rota: " + String.join(" -> ", rota);
+
+                    organiza_registro(cpf,rota);
+                    
+
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
                 } else {
                     String resposta = "Falha na compra. Não há passagens suficientes para um dos trechos da rota.";
@@ -333,7 +342,7 @@ public class ServidorNio {
             }
     }
 
-    public static void atualizar_aquivo(){
+    public static void atualizar_arquivo_cidades(){
         // Caminho e nome do arquivo JSON
         String caminhoPasta = "dados";
         String nomeArquivo = "cidades.json";
@@ -361,6 +370,97 @@ public class ServidorNio {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // Método para organizar e registrar informações sobre uma rota associada a um CPF
+    public static void organiza_registro(String cpf, List<String> rota) {
+        // Cria uma nova lista para armazenar as informações da rota e a data/hora atual
+        List<String> informacoes = new ArrayList<>();
+
+        // Obtém a data e hora atual no formato LocalDateTime
+        LocalDateTime dataHoraAtual = LocalDateTime.now();
+        // Converte a data e hora atual para uma string no formato ISO (yyyy-MM-dd'T'HH:mm:ss.SSS)
+        String data = dataHoraAtual.toString();
+
+        // Adiciona todas as localidades da rota à lista de informações
+        for (String c : rota) {
+            informacoes.add(c);
+        }
+        // Adiciona a data e hora atual à lista de informações
+        informacoes.add(data);
+
+        // Adiciona a lista de informações ao mapa Registro_de_compra, associando-a ao CPF fornecido
+        Registro_de_compra.put(cpf, informacoes);
+
+        // Imprime o conteúdo do mapa Registro_de_compra no console
+        System.out.println(Registro_de_compra);
+
+        // Chama o método arquivar_registro_cliente para arquivar o mapa Registro_de_compra
+        arquivar_registro_cliente(Registro_de_compra);
+    }
+
+
+    public static void arquivar_registro_cliente(HashMap<String,List> Registro_de_compra){
+        // Caminho e nome do arquivo JSON
+        String caminhoPasta = "dados";
+        String nomeArquivo = "registro_de_compra.json";
+        File arquivoJSON = new File(caminhoPasta, nomeArquivo);
+
+
+
+        File pasta = new File(caminhoPasta);
+        if (!pasta.exists()) {
+            if (pasta.mkdirs()) {
+                System.out.println("Pasta criada com sucesso.");
+            } else {
+                System.out.println("Falha ao criar a pasta.");
+                return;
+            }
+
+                // Converter HashMap para JSONObject e salvar em arquivo JSON
+            JSONObject jsonObject = new JSONObject(Registro_de_compra);
+
+            try (FileWriter file = new FileWriter(arquivoJSON)) {
+                file.write(jsonObject.toJSONString());
+                file.flush();
+                System.out.println("Trechos atualizados com sucesso: " + arquivoJSON.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            Map<String, List> conteudo_lido = new HashMap<>();
+            // Ler dados do arquivo JSON e converter de volta para HashMap
+            JSONParser parser = new JSONParser();
+            try (FileReader reader = new FileReader(arquivoJSON)) {
+                // Faz o parsing do arquivo e o converte em um objeto JSONObject
+                JSONObject jsonLido = (JSONObject) parser.parse(reader);
+
+                conteudo_lido.putAll(jsonLido);
+                
+                for(String cpf_temporario : Registro_de_compra.keySet()){
+                    conteudo_lido.put(cpf_temporario, Registro_de_compra.get(cpf_temporario));
+                }
+
+                // Converter HashMap para JSONObject e salvar em arquivo JSON
+                JSONObject jsonObject = new JSONObject(conteudo_lido);
+
+                try (FileWriter file = new FileWriter(arquivoJSON)) {
+                    file.write(jsonObject.toJSONString());
+                    file.flush();
+                    System.out.println("Trechos atualizados com sucesso: " + arquivoJSON.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                
+
+            } catch (IOException | ParseException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        
     }
     
 }
