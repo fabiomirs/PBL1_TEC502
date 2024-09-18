@@ -58,7 +58,9 @@ public class AdicionarCidades {
         adicionador.adicionarCidade("Recife", "Salvador", 10L);
         adicionador.adicionarCidade("Recife", "Fortaleza", 10L);
 
+        apagarRegistroDeCompra();
         salvar();
+        
     }
 
     public static void salvar(){
@@ -91,5 +93,24 @@ public class AdicionarCidades {
         }
     }
 
+     // Método para apagar o arquivo registro_de_compra.json
+     public static void apagarRegistroDeCompra() {
+        String caminhoPasta = "dados";
+        String nomeArquivo = "registro_de_compra.json";
+        File arquivoJSON = new File(caminhoPasta, nomeArquivo);
+
+        if (arquivoJSON.exists()) {
+            if (arquivoJSON.delete()) {
+                System.out.println("Arquivo registro_de_compra.json apagado com sucesso.");
+            } else {
+                System.out.println("Falha ao apagar o arquivo registro_de_compra.json.");
+            }
+        } else {
+            System.out.println("Arquivo registro_de_compra.json não encontrado.");
+        }
+    }
+
 }
+
+
 
