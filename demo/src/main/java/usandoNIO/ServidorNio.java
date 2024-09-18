@@ -144,12 +144,11 @@ public class ServidorNio {
     
 
     private static synchronized void processarRequisicao(SocketChannel clientChannel, String request, String cpf) throws IOException {
-        
         String[] parts = request.split(",");
         String acao = parts[0];
     
         if (acao.equals("iniciar_compra")) {
-            //Mostra as 10 cidades disponíveis
+            // Mostra as 10 cidades disponíveis
             StringBuilder cidadesDisponiveis = new StringBuilder("Cidades disponíveis:\n");
             int count = 1;
             for (String cidade : trechos.keySet()) {
@@ -160,62 +159,62 @@ public class ServidorNio {
             clientChannel.write(ByteBuffer.wrap(cidadesDisponiveis.toString().getBytes()));
     
         } else if (acao.equals("escolher_cidades")) {
-            //Recebe a origem e o destino escolhidos
+            // Recebe a origem e o destino escolhidos
             String cidadeOrigem = parts[1];
             String cidadeDestino = parts[2];
     
             if (trechos.containsKey(cidadeOrigem)) {
                 origem_dos_clientes.put(cpf, cidadeOrigem);
-
     
                 // Lista rotas possíveis
                 List<List<String>> rotas = encontrarRotasBFS(cidadeOrigem, cidadeDestino);
                 StringBuilder resposta = new StringBuilder("Rotas possíveis de " + cidadeOrigem + " para " + cidadeDestino + ":\n");
     
                 if (rotas.isEmpty()) {
-    resposta.append("Nenhuma rota encontrada.");
-        } else {
-            int rotaNumero = 1;
-            for (List<String> rota : rotas) {
-                resposta.append("Rota ").append(rotaNumero).append(":\n");
-
-                Long passagensTotalDisponiveis = (long) Integer.MAX_VALUE; // valor inicial para as passagens 
-
-                StringBuilder rotaDetalhes = new StringBuilder();
-                for (int i = 0; i < rota.size() - 1; i++) {
-                    String trechoOrigem = rota.get(i);
-                    String trechoDestino = rota.get(i + 1);
-
-                    // Verifica se o trecho existe antes de acessar os detalhes
-                    if (trechos.containsKey(trechoOrigem) && trechos.get(trechoOrigem).containsKey(trechoDestino)) {
-
-
-                        Long passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
-
-
-                        rotaDetalhes.append(trechoOrigem).append(" -> ").append(trechoDestino)
-                                    .append(" (Passagens disponíveis: ").append(passagensDisponiveis).append(")");
-
-                        // Atualiza a quantidade total de passagens disponíveis para a rota
-                        if (passagensDisponiveis < passagensTotalDisponiveis) {
-                            passagensTotalDisponiveis = passagensDisponiveis;
+                    resposta.append("Nenhuma rota encontrada.");
+                } else {
+                    int rotaNumero = 1;
+                    for (List<String> rota : rotas) {
+                        resposta.append("Rota ").append(rotaNumero).append(":\n");
+    
+                        Long passagensTotalDisponiveis = (long) Integer.MAX_VALUE; // valor inicial para as passagens
+                        StringBuilder rotaDetalhes = new StringBuilder();
+                        for (int i = 0; i < rota.size() - 1; i++) {
+                            String trechoOrigem = rota.get(i);
+                            String trechoDestino = rota.get(i + 1);
+    
+                            // Verifica se o trecho existe antes de acessar os detalhes
+                            if (trechos.containsKey(trechoOrigem) && trechos.get(trechoOrigem).containsKey(trechoDestino)) {
+                                Long passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
+                                rotaDetalhes.append(trechoOrigem).append(" -> ").append(trechoDestino)
+                                            .append(" (Passagens disponíveis: ").append(passagensDisponiveis).append(")");
+    
+                                // Atualiza a quantidade total de passagens disponíveis para a rota
+                                if (passagensDisponiveis < passagensTotalDisponiveis) {
+                                    passagensTotalDisponiveis = passagensDisponiveis;
+                                }
+    
+                                if (i < rota.size() - 2) {
+                                    rotaDetalhes.append(", ");
+                                }
+                            } else {
+                                rotaDetalhes.append(trechoOrigem).append(" -> ").append(trechoDestino)
+                                            .append(" (Informação de passagens não disponível)");
+                            }
                         }
-
-                        if (i < rota.size() - 2) {
-                            rotaDetalhes.append(", ");
-                        }
-                    } else {
-                        rotaDetalhes.append(trechoOrigem).append(" -> ").append(trechoDestino)
-                                    .append(" (Informação de passagens não disponível)");
+    
+                        // Calcula o preço da rota
+                        int numeroCidades = rota.size(); // Inclui a cidade de origem e destino
+                        double precoRota = 5000.0 / numeroCidades;
+    
+                        // Adiciona os detalhes da rota, o número de passagens disponíveis e o preço
+                        resposta.append(rotaDetalhes.toString()).append("\n");
+                        resposta.append("Total de passagens disponíveis para a rota: ").append(passagensTotalDisponiveis).append("\n");
+                        resposta.append("Preço da rota: R$ ").append(String.format("%.2f", precoRota)).append("\n\n");
+    
+                        rotaNumero++;
                     }
                 }
-
-                resposta.append(rotaDetalhes.toString()).append("\n");
-                resposta.append("Total de passagens disponíveis para a rota: ").append(passagensTotalDisponiveis).append("\n\n");
-
-                rotaNumero++;
-            }
-        }
                 clientChannel.write(ByteBuffer.wrap(resposta.toString().getBytes()));
             } else {
                 clientChannel.write(ByteBuffer.wrap("Cidade de origem inválida.".getBytes()));
@@ -226,9 +225,7 @@ public class ServidorNio {
             int rotaEscolhida = Integer.parseInt(parts[1]) - 1; // A rota será recebida a partir da escolha do cliente
             String cidadeOrigem = origem_dos_clientes.get(cpf);
             String cidadeDestino = parts[2];
-
-            
-            
+    
             List<List<String>> rotas = encontrarRotasBFS(cidadeOrigem, cidadeDestino);
             if (rotaEscolhida >= 0 && rotaEscolhida < rotas.size()) {
                 List<String> rota = rotas.get(rotaEscolhida);
@@ -240,12 +237,12 @@ public class ServidorNio {
                     String trechoOrigem = rota.get(i);
                     String trechoDestino = rota.get(i + 1);
                     Long passagensDisponiveis = trechos.get(trechoOrigem).get(trechoDestino);
-                    
+    
                     // Atualiza a quantidade total de passagens disponíveis para a rota
                     if (passagensDisponiveis < passagensTotalDisponiveis) {
                         passagensTotalDisponiveis = passagensDisponiveis;
                     }
-                    
+    
                     if (passagensDisponiveis <= 0) {
                         sucesso = false;
                         break;
@@ -262,10 +259,9 @@ public class ServidorNio {
                     }
                     atualizar_arquivo_cidades();
                     String resposta = "Compra efetuada com sucesso para a rota: " + String.join(" -> ", rota);
-
-                    organiza_registro(cpf,rota);
-                    
-
+    
+                    organiza_registro(cpf, rota);
+    
                     clientChannel.write(ByteBuffer.wrap(resposta.getBytes()));
                 } else {
                     String resposta = "Falha na compra. Não há passagens suficientes para um dos trechos da rota.";
@@ -276,6 +272,7 @@ public class ServidorNio {
             }
         }
     }
+    
     
     public static List<List<String>> encontrarRotasBFS(String origem, String destino) {
         List<List<String>> rotas = new ArrayList<>();
@@ -400,14 +397,13 @@ public class ServidorNio {
     }
 
 
-    public static void arquivar_registro_cliente(HashMap<String,List> Registro_de_compra){
+    public static void arquivar_registro_cliente(HashMap<String, List> Registro_de_compra) {
         // Caminho e nome do arquivo JSON
         String caminhoPasta = "dados";
         String nomeArquivo = "registro_de_compra.json";
         File arquivoJSON = new File(caminhoPasta, nomeArquivo);
-
-
-
+    
+        // Verifica se a pasta existe, caso contrário, cria
         File pasta = new File(caminhoPasta);
         if (!pasta.exists()) {
             if (pasta.mkdirs()) {
@@ -416,51 +412,51 @@ public class ServidorNio {
                 System.out.println("Falha ao criar a pasta.");
                 return;
             }
-
-                // Converter HashMap para JSONObject e salvar em arquivo JSON
-            JSONObject jsonObject = new JSONObject(Registro_de_compra);
-
-            try (FileWriter file = new FileWriter(arquivoJSON)) {
-                file.write(jsonObject.toJSONString());
-                file.flush();
-                System.out.println("Trechos atualizados com sucesso: " + arquivoJSON.getAbsolutePath());
+        }
+    
+        // Se o arquivo JSON não existir, cria um novo arquivo
+        if (!arquivoJSON.exists()) {
+            try {
+                arquivoJSON.createNewFile();
+                System.out.println("Arquivo de registro criado com sucesso.");
             } catch (IOException e) {
+                System.out.println("Erro ao criar o arquivo JSON.");
                 e.printStackTrace();
+                return;
             }
         }
-        else{
-            Map<String, List> conteudo_lido = new HashMap<>();
-            // Ler dados do arquivo JSON e converter de volta para HashMap
+    
+        Map<String, List> conteudo_lido = new HashMap<>();
+    
+        if (arquivoJSON.length() > 0) {
             JSONParser parser = new JSONParser();
             try (FileReader reader = new FileReader(arquivoJSON)) {
                 // Faz o parsing do arquivo e o converte em um objeto JSONObject
                 JSONObject jsonLido = (JSONObject) parser.parse(reader);
-
-                conteudo_lido.putAll(jsonLido);
-                
-                for(String cpf_temporario : Registro_de_compra.keySet()){
-                    conteudo_lido.put(cpf_temporario, Registro_de_compra.get(cpf_temporario));
+                // Converte o JSONObject para HashMap
+                for (Object key : jsonLido.keySet()) {
+                    String cpf = (String) key;
+                    conteudo_lido.put(cpf, (List) jsonLido.get(cpf));
                 }
-
-                // Converter HashMap para JSONObject e salvar em arquivo JSON
-                JSONObject jsonObject = new JSONObject(conteudo_lido);
-
-                try (FileWriter file = new FileWriter(arquivoJSON)) {
-                    file.write(jsonObject.toJSONString());
-                    file.flush();
-                    System.out.println("Trechos atualizados com sucesso: " + arquivoJSON.getAbsolutePath());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                
-
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-
         }
-
-        
+    
+        for (String cpf_temporario : Registro_de_compra.keySet()) {
+            conteudo_lido.put(cpf_temporario, Registro_de_compra.get(cpf_temporario));
+        }
+    
+        // Converter HashMap para JSONObject e salvar em arquivo JSON
+        JSONObject jsonObject = new JSONObject(conteudo_lido);
+        try (FileWriter file = new FileWriter(arquivoJSON)) {
+            file.write(jsonObject.toJSONString());
+            file.flush();
+            System.out.println("Trechos atualizados com sucesso: " + arquivoJSON.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+    
     
 }
