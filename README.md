@@ -94,6 +94,37 @@ Caso um cliente seja desconectado durante uma compra, sua conexão com o servido
 
 ## Docker adicionado ao sistema e como executar o sistema.
 
+A utiliação do Docker neste projeto visa garantir um ambiente de execução padronizado e isolado, facilitando o processo de configuração. O Docker permite que tanto o servidor quanto os clientes sejam executados em containers independentes, eliminando problemas de compatibilidade entre diferentes sistemas operacionais e dependências. Com ele, todo o ambiente pode ser configurado e replicado com facilidade, tornando o projeto mais portátil e garantindo que ele funcione da mesma forma em qualquer máquina. Além disso, o uso de containers simplifica a escalabilidade do sistema, permitindo adicionar múltiplos clientes de forma rápida e eficiente.
+
+## Como executar o projeto
+
+1. **Construir o container Docker:**
+Navegue até a pasta onde o arquivo Dockerfile está localizado e execute o comando abaixo para construir os containers:
+    ```bash
+    docker-compose build
+    ```
+
+2. **Executar o servidor:**
+    ```bash
+    docker-compose up servidor
+    ```
+
+**Adicionar clientes:**
+
+3. **Criar um único cliente por vez:**
+    ```bash
+    docker-compose run --rm cliente
+    ```
+
+4. **Adicionar múltiplos clientes via script:**
+Caso você queira adicionar vários clientes de uma vez, utilize o script script.ps1. Primeiro, edite o script para definir a quantidade de clientes que deseja criar, e depois na pasta onde o script está localizado, execute-o com o comando:
+    ```bash
+    .\script.ps1
+    ```
+
+
+
+
 ## Conclusão
 
 ## Referências
