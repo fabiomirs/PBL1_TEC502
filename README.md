@@ -39,7 +39,7 @@ Na questão de modularização, foram implementadas duas classes principais, Cli
 
 ## Que paradigma de serviço foi usado (stateless ou statefull)? Qual(is) o(s) motivo(s) dessa escolha?
 
-	O servidor foi implementado seguindo o paradigma de serviço stateful, o que significa que ele mantém o estado do cliente ao longo das interações. Por exemplo, quando o cliente quer comprar uma passagem, primeiro ele indica seu CPF, o servidor analisa o conteúdo, verifica se não está conectado por outro cliente e libera o acesso. Em seguida, é feita uma troca de mensagens, que funciona da seguinte forma:
+O servidor foi implementado seguindo o paradigma de serviço stateful, o que significa que ele mantém o estado do cliente ao longo das interações. Por exemplo, quando o cliente quer comprar uma passagem, primeiro ele indica seu CPF, o servidor analisa o conteúdo, verifica se não está conectado por outro cliente e libera o acesso. Em seguida, é feita uma troca de mensagens, que funciona da seguinte forma:
  
  - o servidor envia uma lista de cidades disponíveis, o cliente seleciona a origem e o destino e envia ao servidor, o servidor devolve as rotas, e o cliente, por fim, seleciona qual deseja comprar. Esse ciclo de guardar estado entre interações é o que caracteriza um servidor stateful.
 
@@ -48,7 +48,7 @@ Na questão de modularização, foram implementadas duas classes principais, Cli
 
 ## Que protocolo de comunicação foi desenvolvido entre os componentes do sistema? Quais as mensagens e a ordem das mensagens trocadas.
 
-	As mensagens são transmitidas como strings, formatadas com um cabeçalho que indica a operação a ser realizada pelo servidor e um corpo que contém os dados necessários, como a cidade de origem ou destino. 
+As mensagens são transmitidas como strings, formatadas com um cabeçalho que indica a operação a ser realizada pelo servidor e um corpo que contém os dados necessários, como a cidade de origem ou destino. 
  
  Os principais protocolos desenvolvidos para a comunicação são:
 	- "Iniciar_compra": Indica ao servidor que a compra foi iniciada e solicita as cidades disponíveis.
@@ -57,7 +57,7 @@ Na questão de modularização, foram implementadas duas classes principais, Cli
 Com base nesses protocolos, o servidor interpreta as mensagens e executa ações correspondentes, como listar cidades ou rotas.
 A ordem de troca de mensagens entre cliente e servidor segue o fluxo apresentado na imagem abaixo:
 
-<p align="center"><strong>Componentes da De1-Soc. </strong></p>
+<p align="center"><strong></strong></p>
 <p align="center">
   <img src="Arquivos das sessões/Diagrama de sequência cliente-servidor.png" width = "400" />
 </p>
@@ -71,15 +71,15 @@ O tipo de formatação utilizado para a troca de dados é String, estruturada em
 
 ## O sistema permite a realização de compras de passagens de forma paralela ou simultânea? Como é possivel otimizar o paralelismo do sistema.
 
-	O sistema permite seu funcionamento de forma simultânea, ou seja, vários usuários podem realizar compras e acessar o sistema ao mesmo tempo. O que possibilita esse tratamento é o uso da API NIO (Non-blocking I/O), que faz parte da plataforma Java e foi projetada para suportar operações assíncronas e não bloqueantes, o que facilita a execução de tarefas simultâneas.
+O sistema permite seu funcionamento de forma simultânea, ou seja, vários usuários podem realizar compras e acessar o sistema ao mesmo tempo. O que possibilita esse tratamento é o uso da API NIO (Non-blocking I/O), que faz parte da plataforma Java e foi projetada para suportar operações assíncronas e não bloqueantes, o que facilita a execução de tarefas simultâneas.
  
-	O NIO moderno utiliza canais e buffers para lidar com dados de maneira eficiente. Diferente de operações bloqueantes, onde o sistema precisa esperar a conclusão de uma tarefa antes de iniciar outra, no NIO, as operações de leitura e escrita podem ser realizadas de forma assíncrona, permitindo que várias operações ocorram ao mesmo tempo. Isso é fundamental para cenários onde múltiplos usuários acessam o sistema simultaneamente, como na venda de passagens.
+O NIO moderno utiliza canais e buffers para lidar com dados de maneira eficiente. Diferente de operações bloqueantes, onde o sistema precisa esperar a conclusão de uma tarefa antes de iniciar outra, no NIO, as operações de leitura e escrita podem ser realizadas de forma assíncrona, permitindo que várias operações ocorram ao mesmo tempo. Isso é fundamental para cenários onde múltiplos usuários acessam o sistema simultaneamente, como na venda de passagens.
  
-	Os canais (Channels) são os principais responsáveis por estabelecer conexões para leitura e escrita de dados. Eles operam de forma não bloqueante, ou seja, o sistema pode continuar executando outras tarefas enquanto os dados estão sendo processados. Isso permite que várias requisições de diferentes usuários sejam atendidas ao mesmo tempo, sem que uma operação precise esperar pela conclusão de outra.
+Os canais (Channels) são os principais responsáveis por estabelecer conexões para leitura e escrita de dados. Eles operam de forma não bloqueante, ou seja, o sistema pode continuar executando outras tarefas enquanto os dados estão sendo processados. Isso permite que várias requisições de diferentes usuários sejam atendidas ao mesmo tempo, sem que uma operação precise esperar pela conclusão de outra.
  
-	Os buffers atuam como áreas temporárias de armazenamento de dados enquanto eles são manipulados pelos canais. Eles otimizam o fluxo de dados, permitindo que o sistema lide com grandes volumes de informações de forma eficiente e não bloqueante.
+Os buffers atuam como áreas temporárias de armazenamento de dados enquanto eles são manipulados pelos canais. Eles otimizam o fluxo de dados, permitindo que o sistema lide com grandes volumes de informações de forma eficiente e não bloqueante.
  
-	Esses componentes do NIO permitem que o sistema funcione de maneira altamente paralela, suportando múltiplos acessos simultâneos e garantindo que as operações de venda de passagens possam ser realizadas por vários usuários ao mesmo tempo, sem causar lentidão ou interrupções no sistema.
+Esses componentes do NIO permitem que o sistema funcione de maneira altamente paralela, suportando múltiplos acessos simultâneos e garantindo que as operações de venda de passagens possam ser realizadas por vários usuários ao mesmo tempo, sem causar lentidão ou interrupções no sistema.
 
 
 ## Há problemas de concorrência decorrentes do uso de conexões simultâneas? Se sim, como estas questões foram tratadas?
