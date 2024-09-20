@@ -92,6 +92,14 @@ Caso um cliente seja desconectado durante uma compra, sua conexão com o servido
 
 ## O sistema utiliza algum mecanismo para melhorar o tempo de resposta? Como você avaliou o desempenho do seu sistema? Fez algum teste de desempenho?
 
+O sistema utiliza um canal não bloqueante com Java NIO para comunicação entre o cliente e o servidor. Esse mecanismo melhora o tempo de resposta, pois permite que o cliente não fique bloqueado enquanto aguarda uma resposta do servidor. O cliente pode realizar outras operações ou verificar outras conexões, evitando o desperdício de recursos durante o tempo de espera. Além disso, o código inclui um timeout de 5 segundos para evitar que o cliente fique esperando indefinidamente por uma resposta do servidor. Caso o timeout seja excedido, o sistema interrompe a conexão, o que também contribui para uma melhor gestão de tempo.
+
+O servidor, implementado com Java NIO, é capaz de gerenciar várias conexões de clientes de maneira eficiente e não bloqueante. o servidor utiliza ConcurrentHashMap para armazenar os clientes conectados e suas informações, permitindo acesso seguro e concorrente às operações de leitura e escrita. Além disso, o sistema registra informações sobre as compras em um arquivo JSON, o que permite que os dados sejam persistidos mesmo após o encerramento do servidor. 
+
+Para avaliar o desempenho do sistema, foram realizados testes utilizando um script para simular a conexão simultânea de 1, 2, 5 e 20 clientes ao servidor. Cada cliente foi iniciado por meio do script script.ps1, que automatiza a criação de múltiplas instâncias de cliente usando Docker. Foi a maneira utilizada para avaliar a escalabilidade do sistema e o tempo de resposta em condições de carga. A arquitetura baseada em NIO e a estrutura de dados concorrentes manteram-se funcionanis com os testes realizados suportando as interações de troca de mensagens.
+
+
+
 ## Docker adicionado ao sistema e como executar o sistema.
 
 A utiliação do Docker neste projeto visa garantir um ambiente de execução padronizado e isolado, facilitando o processo de configuração. O Docker permite que tanto o servidor quanto os clientes sejam executados em containers independentes, eliminando problemas de compatibilidade entre diferentes sistemas operacionais e dependências. Com ele, todo o ambiente pode ser configurado e replicado com facilidade, tornando o projeto mais portátil e garantindo que ele funcione da mesma forma em qualquer máquina. Além disso, o uso de containers simplifica a escalabilidade do sistema, permitindo adicionar múltiplos clientes de forma rápida e eficiente.
@@ -116,12 +124,17 @@ Navegue até a pasta onde o arquivo Dockerfile está localizado e execute o coma
     docker-compose run --rm cliente
     ```
 
-4. **Adicionar múltiplos clientes via script:**
+4. **Adicionar múltiplos clientes via script(No Powershell):**
 Caso você queira adicionar vários clientes de uma vez, utilize o script script.ps1. Primeiro, edite o script para definir a quantidade de clientes que deseja criar, e depois na pasta onde o script está localizado, execute-o com o comando:
     ```bash
     .\script.ps1
     ```
-
+    
+4. **Adicionar múltiplos clientes via script(Via script bash):**
+No linux é possível fazer isso executando o comando abaixo, a quantidade de clientes é indicada por 'seq 1 5' um loop de 5 iterações:
+    ```bash
+    for i in $(seq 1 5); do docker-compose run --rm cliente; done
+    ```
 
 
 
