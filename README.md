@@ -148,8 +148,13 @@ A implementação do sistema de reservas de passagens aéreas foi feita de manei
 - Fábio S. Miranda
 - Armando 
 
-## Tutores
+## Tutor
 
 - Antonio A T R Coutinho
 
 ## Referências
+
+ORACLE. Java NIO. Disponível em:
+https://docs.oracle.com/en/java/javase/21/core/java-nio.html.
+
+GABRIEL, Antonio. Java I/O, Java NIO e NIO.2: Quando utilizar. Medium, 23 set. 2020. Disponível em: https://medium.com/@antonio.gabriel/java-io-java-nio-e-nio-2-quando-utilizar-8c900b1c57a1.
