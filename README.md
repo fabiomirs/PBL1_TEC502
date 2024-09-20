@@ -146,7 +146,7 @@ A implementação do sistema de reservas de passagens aéreas foi feita de manei
 ## Equipe
 
 - Fábio S. Miranda
-- Armando 
+- Armando de Lima Almeida
 
 ## Tutor
 
@@ -158,3 +158,5 @@ ORACLE. Java NIO. Disponível em:
 https://docs.oracle.com/en/java/javase/21/core/java-nio.html.
 
 GABRIEL, Antonio. Java I/O, Java NIO e NIO.2: Quando utilizar. Medium, 23 set. 2020. Disponível em: https://medium.com/@antonio.gabriel/java-io-java-nio-e-nio-2-quando-utilizar-8c900b1c57a1.
+
+RED HAT. Stateful x stateless: qual a diferença? Disponível em: https://www.redhat.com/pt-br/topics/cloud-native-apps/stateful-vs-stateless.
