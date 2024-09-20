@@ -1,6 +1,7 @@
 # VENDEPASS: Venda de Passagens
 ## Introdução
-**(contexto)**, **(problema)**, **(contribuição)**, **(metodologia)**, **(resultados)**.
+
+Este relatório aborda a implementação de um sistema de reservas de passagens aéreas voltado para companhias aéreas de baixo custo. O problema central enfrentado por uma nova companhia brasileira de baixo custo é a necessidade de disponibilizar a compra de passagens pela Internet, permitindo que os clientes escolham trechos disponíveis para suas viagens. Desta forma, foi feita a criação de um sistema de comunicação baseado em TCP/IP que possibilite a interação fluida entre os clientes e o servidor. Este projeto de sistema de reservas de passagens aéreas, utilizando Java, Java NIO e JSON, implementou uma solução escalável para gerenciar a comunicação entre clientes e servidor em um ambiente de baixo custo. A metodologia adotada envolve o uso de sockets TCP para garantir uma comunicação eficaz e a implementação de contêineres Docker para facilitar a execução de múltiplas instâncias do sistema. Através da utilização de Sockets não bloqueantes, o servidor consegue suportar múltiplas conexões simultâneas, permitindo que diversos clientes interajam com o servidor sem comprometer a performance do sistema. Os resultados alcançados demonstram que o sistema é capaz de gerenciar as reservas de passagens de maneira eficiente, permitindo que os clientes escolham trechos e realizem compras de forma intuitiva. 
 
 ## Como a arquitetura foi desenvolvida? Quais os componentes e seus papeis nessa arquitetura?
   A arquitetura foi desenvolvida com base no modelo de comunicação TCP/IP, utilizando a linguagem de programação Java. Para implementar essa comunicação, foi utilizada a API de sockets, que é responsável por criar conexões entre o cliente e o servidor, permitindo o envio e recebimento de dados. A comunicação é estruturada sobre o protocolo TCP/IP, que garante uma transmissão confiável e sequencial dos dados, atendendo aos requisitos do projeto. 
@@ -62,7 +63,7 @@ A ordem de troca de mensagens entre cliente e servidor segue o fluxo apresentado
   <img src="Arquivos das sessões/Diagrama de sequência cliente-servidor.png" width = "400" />
 </p>
 <p align="center"><strong>
-</strong></p>
+</strong> Figura 1. Diagrama de sequência da comunicação cliente-servidor.</p>
 
 
 ## Que tipo de formatação de dados foi usada para transmitir os dados, permitindo que nós de diferentes sistemas e implementadas em diferentes linguagens compreendam as mensagens trocadas.
@@ -139,5 +140,7 @@ No linux é possível fazer isso executando o comando abaixo, a quantidade de cl
 
 
 ## Conclusão
+
+A implementação do sistema de reservas de passagens aéreas foi feita de maneira eficaz, permitindo que os clientes façam a interação com o serviço de aviação. Por meio do uso de sockets TCP/IP, foi possível estabelecer uma comunicação robusta e eficiente entre o servidor e os clientes, permitindo a escolha de trechos de forma dinâmica. Os objetivos do projeto foram alcançados, proporcionando uma experiência de compra que respeita a prioridade dos clientes, enquanto mantém a flexibilidade necessária para acomodar diferentes escolhas de rotas e múltiplos clientes conectados a rede. 
 
 ## Referências
