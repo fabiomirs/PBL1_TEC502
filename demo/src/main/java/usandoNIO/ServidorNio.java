@@ -1,4 +1,5 @@
 package usandoNIO;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -12,30 +13,27 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Queue;
 
-
-
+/*
+ * Classe que representa o servidor na comunicação cliente-servidor
+ */
 public class ServidorNio {
     private static ConcurrentHashMap<SocketChannel, String> clientesConectados = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, SocketChannel> clientesConectadosPorCPF = new ConcurrentHashMap<>();
 
-    private static ConcurrentHashMap<String, Map<String,Long>> trechos; // pros grafos
-
+    // inicialização de concurrenthashmap para os grafos
+    private static ConcurrentHashMap<String, Map<String,Long>> trechos; 
 
     private static HashMap<String, String> origem_dos_clientes;
     private static HashMap<String,List> Registro_de_compra;
     
-
-
     public static void main(String[] args) throws IOException {
         trechos = new ConcurrentHashMap<>();
         
@@ -49,7 +47,7 @@ public class ServidorNio {
         
         ler_cidades(arquivoJSON);
 
-        // Configuração do NIO
+        // Configuração para usar o NIO
         Selector selector = Selector.open();
         ServerSocketChannel serverSocket = ServerSocketChannel.open();
         serverSocket.bind(new InetSocketAddress(12345));
@@ -71,8 +69,7 @@ public class ServidorNio {
 
                     try {
                         if (key.isAcceptable()) {
-                            // Aceitar nova conexão
-                            
+                            // Aceitar nova conexão de um cliente ao servidor
                             ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
                             SocketChannel clientChannel = serverChannel.accept();
                             clientChannel.configureBlocking(false);
@@ -110,10 +107,12 @@ public class ServidorNio {
                         // Tratamento de exceção e continuar servidor
                         System.err.println("Erro na conexão: " + e.getMessage());
                         
-                        key.cancel(); // Remover a chave do cliente com erro
-                        key.channel().close(); // Fechar o canal associado
+                        // Remover a chave do cliente com erro
+                        key.cancel(); 
+                         // Fechar o canal associado
+                        key.channel().close();
 
-                        //for para remover o cpf do cliente dos clientes conectados quando ocorre a interrupção
+                        //loop para remover o cpf do cliente dos clientes conectados quando ocorre a interrupção
                         for(String clientes_conectados : clientesConectadosPorCPF.keySet()){
                             if(clientesConectadosPorCPF.get(clientes_conectados).isOpen() == false){
                                 clientesConectadosPorCPF.remove(clientes_conectados);
@@ -154,12 +153,13 @@ public class ServidorNio {
             for (String cidade : trechos.keySet()) {
                 cidadesDisponiveis.append(count).append(". ").append(cidade).append("\n");
                 count++;
-                if (count > 10) break; // Limitar a 10 cidades
+                 // Limitar a 10 cidades
+                if (count > 10) break;
             }
             clientChannel.write(ByteBuffer.wrap(cidadesDisponiveis.toString().getBytes()));
     
         } else if (acao.equals("escolher_cidades")) {
-            // Recebe a origem e o destino escolhidos
+            // Recebe a origem e o destino escolhidos pelo cliente
             String cidadeOrigem = parts[1];
             String cidadeDestino = parts[2];
     
@@ -177,7 +177,8 @@ public class ServidorNio {
                     for (List<String> rota : rotas) {
                         resposta.append("Rota ").append(rotaNumero).append(":\n");
     
-                        Long passagensTotalDisponiveis = (long) Integer.MAX_VALUE; // valor inicial para as passagens
+                        // valor inicial para as passagens
+                        Long passagensTotalDisponiveis = (long) Integer.MAX_VALUE; 
                         StringBuilder rotaDetalhes = new StringBuilder();
                         for (int i = 0; i < rota.size() - 1; i++) {
                             String trechoOrigem = rota.get(i);
@@ -222,7 +223,8 @@ public class ServidorNio {
     
         } else if (acao.equals("escolher_rota")) {
             // Recebe a rota escolhida e processar a compra
-            int rotaEscolhida = Integer.parseInt(parts[1]) - 1; // A rota será recebida a partir da escolha do cliente
+            // A rota será recebida a partir da escolha do cliente
+            int rotaEscolhida = Integer.parseInt(parts[1]) - 1; 
             String cidadeOrigem = origem_dos_clientes.get(cpf);
             String cidadeDestino = parts[2];
     
@@ -307,7 +309,6 @@ public class ServidorNio {
                 }
             }
         }
-    
         return rotas;
     }
     
@@ -322,7 +323,6 @@ public class ServidorNio {
         return -1;
     }
 
-    
     public static void ler_cidades(File arquivoJSON){
             // Ler dados do arquivo JSON e converter de volta para HashMap
             JSONParser parser = new JSONParser();
@@ -331,8 +331,6 @@ public class ServidorNio {
                 JSONObject jsonLido = (JSONObject) parser.parse(reader);
 
                 trechos.putAll(jsonLido);
-                
-
 
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
@@ -344,8 +342,6 @@ public class ServidorNio {
         String caminhoPasta = "dados";
         String nomeArquivo = "cidades.json";
         File arquivoJSON = new File(caminhoPasta, nomeArquivo);
-
-
 
         File pasta = new File(caminhoPasta);
         if (!pasta.exists()) {
@@ -457,6 +453,4 @@ public class ServidorNio {
             e.printStackTrace();
         }
     }
-    
-    
 }

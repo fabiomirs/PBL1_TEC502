@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.json.simple.JSONObject;
 
+/*
+ * Classe utilizada para criar um grafo com todas as cidades possíveis, as conexões entre elas e a quantidade de passagens
+ * disponíveis para cada trecho criado.
+ */
 public class AdicionarCidades {
 
     private static ConcurrentHashMap<String, Map<String, Long>> trechos; // Mapa de adjacência
@@ -19,7 +22,7 @@ public class AdicionarCidades {
     }
 
     // Método para adicionar cidades e passagens
-    public static void adicionarCidade(String origem, String destino, Long passagens) {
+    public void adicionarCidade(String origem, String destino, Long passagens) {
         // Se a origem não existir no mapa, inicializa a lista de adjacência
         trechos.putIfAbsent(origem, new HashMap<>());
         // Adiciona o destino à lista de adjacência da origem
@@ -62,14 +65,15 @@ public class AdicionarCidades {
         salvar();
         
     }
-
+    /*
+     * Método utilizado para salvar as informações das cidades em um arquivo do tipo JSON, que será utilizado para carregamento
+     * no servidor.
+     */
     public static void salvar(){
         // Caminho e nome do arquivo JSON
         String caminhoPasta = "dados";
         String nomeArquivo = "cidades.json";
         File arquivoJSON = new File(caminhoPasta, nomeArquivo);
-
-
 
         File pasta = new File(caminhoPasta);
         if (!pasta.exists()) {
@@ -93,7 +97,7 @@ public class AdicionarCidades {
         }
     }
 
-     // Método para apagar o arquivo registro_de_compra.json
+     // Método para apagar o arquivo registro_de_compra.json para reiniciar todo o histórico do servidor
      public static void apagarRegistroDeCompra() {
         String caminhoPasta = "dados";
         String nomeArquivo = "registro_de_compra.json";
