@@ -3,27 +3,27 @@ services:
   servidor:
     build:
       context: .
-      target: servidor
-    container_name: servidor-container
+      dockerfile: Dockerfile
+    environment:
+      - APP_TYPE=ServidorNio
     ports:
-      - "4000:4000"
+      - "12345:12345"
+    networks:
+      - rede-app
 
-  cliente1:
+  cliente:
+    stdin_open: true
+    tty: true
     build:
       context: .
-      target: cliente
-    container_name: cliente1-container
+      dockerfile: Dockerfile
+    environment:
+      - APP_TYPE=ClienteNio
     depends_on:
       - servidor
-    stdin_open: true     # Permite entrada interativa
-    tty: true            # Aloca um terminal para o contêiner
+    networks:
+      - rede-app
 
-  cliente2:
-    build:
-      context: .
-      target: cliente
-    container_name: cliente2-container
-    depends_on:
-      - servidor
-    stdin_open: true     # Permite entrada interativa
-    tty: true            # Aloca um terminal para o contêiner
+networks:
+  rede-app:
+    driver: bridge
