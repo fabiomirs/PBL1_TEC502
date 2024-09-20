@@ -101,11 +101,11 @@ Para avaliar o desempenho do sistema, foram realizados testes utilizando um scri
 
 
 
-## Docker adicionado ao sistema e como executar o sistema.
+## Docker adicionado ao sistema
 
 A utiliação do Docker neste projeto visa garantir um ambiente de execução padronizado e isolado, facilitando o processo de configuração. O Docker permite que tanto o servidor quanto os clientes sejam executados em containers independentes, eliminando problemas de compatibilidade entre diferentes sistemas operacionais e dependências. Com ele, todo o ambiente pode ser configurado e replicado com facilidade, tornando o projeto mais portátil e garantindo que ele funcione da mesma forma em qualquer máquina. Além disso, o uso de containers simplifica a escalabilidade do sistema, permitindo adicionar múltiplos clientes de forma rápida e eficiente.
 
-## Como executar o projeto
+## Como executar o sistema
 
 1. **Construir o container Docker:**
 Navegue até a pasta onde o arquivo Dockerfile está localizado e execute o comando abaixo para construir os containers:
@@ -142,5 +142,14 @@ No linux é possível fazer isso executando o comando abaixo, a quantidade de cl
 ## Conclusão
 
 A implementação do sistema de reservas de passagens aéreas foi feita de maneira eficaz, permitindo que os clientes façam a interação com o serviço de aviação. Por meio do uso de sockets TCP/IP, foi possível estabelecer uma comunicação robusta e eficiente entre o servidor e os clientes, permitindo a escolha de trechos de forma dinâmica. Os objetivos do projeto foram alcançados, proporcionando uma experiência de compra que respeita a prioridade dos clientes, enquanto mantém a flexibilidade necessária para acomodar diferentes escolhas de rotas e múltiplos clientes conectados a rede. 
+
+## Equipe
+
+- Fábio S. Miranda
+- Armando 
+
+## Tutores
+
+- Antonio A T R Coutinho
 
 ## Referências
