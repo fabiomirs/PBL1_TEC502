@@ -60,7 +60,7 @@ A ordem de troca de mensagens entre cliente e servidor segue o fluxo apresentado
 
 <p align="center"><strong></strong></p>
 <p align="center">
-  <img src="Arquivos das sessões/Diagrama de sequência cliente-servidor.png" width = "400" />
+  <img src="Arquivos das sessões/Diagrama de sequência.png" width = "400" />
 </p>
 <p align="center"><strong>
 </strong> Figura 1. Diagrama de sequência da comunicação cliente-servidor.</p>
