@@ -1,0 +1,29 @@
+version: '3'
+services:
+  servidor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APP_TYPE=ServidorNio
+    ports:
+      - "12345:12345"
+    networks:
+      - rede-app
+
+  cliente:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APP_TYPE=ClienteNio
+    depends_on:
+      - servidor
+    networks:
+      - rede-app
+
+networks:
+  rede-app:
+    driver: bridge
